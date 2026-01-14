@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - App Candidatos</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Bienvenido, <span id="userName">Usuario</span></h1>
+        <div class="card">
+            <h3>Resumen</h3>
+            <p>Seleccione una opción del menú para comenzar a gestionar.</p>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        if (!isAuthenticated()) {
+            window.location.href = "index.html";
+        }
+        renderNavbar();
+        document.getElementById('userName').textContent = localStorage.getItem('user_name') || 'Usuario';
+    </script>
+</body>
+
+</html>

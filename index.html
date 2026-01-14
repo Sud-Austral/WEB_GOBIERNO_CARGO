@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - App Candidatos</title>
+</head>
+<body>
+    <div class="container login-container">
+        <div class="card">
+            <h2>Iniciar Sesión</h2>
+            <form id="loginForm">
+                <input type="email" id="email" placeholder="Correo electrónico" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit" class="btn" style="width: 100%">Ingresar</button>
+            </form>
+            <p id="errorMsg" style="color: red; display: none; margin-top: 1rem;"></p>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        // Si ya hay token, ir al dashboard
+        if (isAuthenticated()) {
+            window.location.href = "dashboard.html";
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            try {
+                const res = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+                
+                if (res.ok) {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("user_name", data.user.nombre);
+                    window.location.href = "dashboard.html";
+                } else {
+                    errorMsg.textContent = data.message || "Error al iniciar sesión";
+                    errorMsg.style.display = "block";
+                }
+            } catch (err) {
+                errorMsg.textContent = "Error de conexión con el servidor";
+                errorMsg.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

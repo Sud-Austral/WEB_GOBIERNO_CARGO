@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Personas</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Gestión de Personas</h1>
+
+        <div class="card">
+            <h3>Nueva Persona</h3>
+            <form id="personaForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="rut" placeholder="RUT *" required>
+                <input type="text" id="nombres" placeholder="Nombres *" required>
+                <input type="text" id="apellidoPaterno" placeholder="Apellido Paterno">
+                <input type="text" id="apellidoMaterno" placeholder="Apellido Materno">
+                <input type="date" id="fechaNacimiento" placeholder="Fecha Nacimiento">
+                <input type="text" id="genero" placeholder="Género">
+                <input type="text" id="nacionalidad" placeholder="Nacionalidad">
+                <input type="email" id="correoElectronico" placeholder="Email">
+                <input type="text" id="telefonoCelular" placeholder="Teléfono">
+                <input type="text" id="regionResidencia" placeholder="Región">
+                <input type="text" id="profesion" placeholder="Profesión">
+                <input type="text" id="gradoAcademico" placeholder="Grado Académico">
+                <input type="text" id="partidoPolitico" placeholder="Partido Político">
+                <input type="text" id="cvUrl" placeholder="URL CV">
+                <textarea id="antecedentes" placeholder="Antecedentes" style="grid-column: span 2"></textarea>
+                <textarea id="observaciones" placeholder="Observaciones" style="grid-column: span 2"></textarea>
+                <textarea id="referencias" placeholder="Referencias" style="grid-column: span 2"></textarea>
+
+                <button type="submit" class="btn" style="grid-column: span 2">Guardar Persona</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Listado de Personas</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>RUT</th>
+                            <th>Nombre Completo</th>
+                            <th>Profesión</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        if (!isAuthenticated()) window.location.href = "index.html";
+        renderNavbar();
+
+        async function loadPersonas() {
+            const res = await fetchAPI('/personas');
+            if (!res) return;
+            const data = await res.json();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.idpersona}</td>
+                    <td>${item.rut || '-'}</td>
+                    <td>${item.nombres} ${item.apellidopaterno || ''}</td>
+                    <td>${item.profesion || '-'}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deletePersona(${item.idpersona})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('personaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fields = [
+                "rut", "nombres", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento",
+                "genero", "nacionalidad", "correoElectronico", "telefonoCelular",
+                "regionResidencia", "profesion", "gradoAcademico", "partidoPolitico",
+                "cvUrl", "antecedentes", "observaciones", "referencias"
+            ];
+
+            const body = {};
+            fields.forEach(f => {
+                const val = document.getElementById(f).value;
+                if (val) body[f] = val;
+            });
+
+            const res = await fetchAPI('/personas', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+
+            if (res && res.ok) {
+                alert("Persona creada correctamente");
+                document.getElementById('personaForm').reset();
+                loadPersonas();
+            } else {
+                alert("Error al crear persona");
+            }
+        });
+
+        async function deletePersona(id) {
+            if (!confirm("¿Seguro que desea eliminar esta persona?")) return;
+            const res = await fetchAPI(`/personas/${id}`, { method: 'DELETE' });
+            if (res && res.ok) loadPersonas();
+        }
+
+        loadPersonas();
+    </script>
+</body>
+
+</html>

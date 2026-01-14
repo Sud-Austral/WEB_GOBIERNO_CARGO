@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Postulaciones</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Gestión de Postulaciones</h1>
+
+        <div class="card">
+            <h3>Nueva Postulación</h3>
+            <form id="postForm">
+                <label>Seleccionar Persona:</label>
+                <select id="idPersona" required>
+                    <option value="">Cargando personas...</option>
+                </select>
+
+                <label>Seleccionar Cargo:</label>
+                <select id="idCargo" required>
+                    <option value="">Cargando cargos...</option>
+                </select>
+
+                <button type="submit" class="btn" style="margin-top: 10px;">Crear Postulación</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Listado de Postulaciones</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Candidato</th>
+                        <th>Cargo</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        if (!isAuthenticated()) window.location.href = "index.html";
+        renderNavbar();
+
+        async function loadSelects() {
+            // Cargar Personas
+            const resP = await fetchAPI('/personas');
+            if (resP) {
+                const personas = await resP.json();
+                const sel = document.getElementById('idPersona');
+                sel.innerHTML = '<option value="">-- Seleccione Persona --</option>';
+                personas.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.idpersona;
+                    opt.textContent = `${p.rut} - ${p.nombres} ${p.apellidopaterno || ''}`;
+                    sel.appendChild(opt);
+                });
+            }
+
+            // Cargar Cargos
+            const resC = await fetchAPI('/cargos');
+            if (resC) {
+                const cargos = await resC.json();
+                const sel = document.getElementById('idCargo');
+                sel.innerHTML = '<option value="">-- Seleccione Cargo --</option>';
+                cargos.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.idcargo;
+                    opt.textContent = `${c.nivel} - ${c.tipo || ''}`;
+                    sel.appendChild(opt);
+                });
+            }
+        }
+
+        async function loadPostulaciones() {
+            const res = await fetchAPI('/postulaciones');
+            if (!res) return;
+            const data = await res.json();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.idpostulacion}</td>
+                    <td>${item.nombres || ''} ${item.apellidopaterno || ''}</td>
+                    <td>${item.cargo_nivel || item.idcargo}</td>
+                    <td>${new Date(item.fechapostulacion).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deletePost(${item.idpostulacion})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                idPersona: document.getElementById('idPersona').value,
+                idCargo: document.getElementById('idCargo').value
+            };
+
+            const res = await fetchAPI('/postulaciones', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+
+            if (res && res.ok) {
+                alert("Postulación creada");
+                loadPostulaciones();
+            } else {
+                alert("Error creando postulación");
+            }
+        });
+
+        async function deletePost(id) {
+            if (!confirm("¿Seguro?")) return;
+            const res = await fetchAPI(`/postulaciones/${id}`, { method: 'DELETE' });
+            if (res && res.ok) loadPostulaciones();
+        }
+
+        loadSelects();
+        loadPostulaciones();
+    </script>
+</body>
+
+</html>

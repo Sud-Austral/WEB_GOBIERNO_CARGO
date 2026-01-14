@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Cargos</title>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Gestión de Cargos</h1>
+
+        <div class="card">
+            <h3>Nuevo Cargo</h3>
+            <form id="cargoForm">
+                <input type="text" id="nivel" placeholder="Nivel" required>
+                <input type="text" id="dependeDe" placeholder="Depende De">
+                <input type="text" id="tipo" placeholder="Tipo">
+                <textarea id="detalle" placeholder="Detalle"></textarea>
+                <button type="submit" class="btn">Guardar</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Listado de Cargos</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nivel</th>
+                        <th>Depende De</th>
+                        <th>Tipo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        if (!isAuthenticated()) window.location.href = "index.html";
+        renderNavbar();
+
+        async function loadCargos() {
+            const res = await fetchAPI('/cargos');
+            if (!res) return;
+            const data = await res.json();
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.idcargo}</td>
+                    <td>${item.nivel || '-'}</td>
+                    <td>${item.dependede || '-'}</td>
+                    <td>${item.tipo || '-'}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteCargo(${item.idcargo})">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('cargoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const body = {
+                nivel: document.getElementById('nivel').value,
+                dependeDe: document.getElementById('dependeDe').value,
+                tipo: document.getElementById('tipo').value,
+                detalle: document.getElementById('detalle').value
+            };
+
+            const res = await fetchAPI('/cargos', {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
+
+            if (res && res.ok) {
+                alert("Cargo creado correctamente");
+                document.getElementById('cargoForm').reset();
+                loadCargos();
+            } else {
+                alert("Error al crear cargo");
+            }
+        });
+
+        async function deleteCargo(id) {
+            if (!confirm("¿Seguro que desea eliminar este cargo?")) return;
+            const res = await fetchAPI(`/cargos/${id}`, { method: 'DELETE' });
+            if (res && res.ok) loadCargos();
+        }
+
+        loadCargos();
+    </script>
+</body>
+
+</html>
