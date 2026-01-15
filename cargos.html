@@ -3,97 +3,153 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Cargos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargos - Gestión Candidatos</title>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Gestión de Cargos</h1>
 
-        <div class="card">
-            <h3>Nuevo Cargo</h3>
-            <form id="cargoForm">
-                <input type="text" id="nivel" placeholder="Nivel" required>
-                <input type="text" id="dependeDe" placeholder="Depende De">
-                <input type="text" id="tipo" placeholder="Tipo">
-                <textarea id="detalle" placeholder="Detalle"></textarea>
-                <button type="submit" class="btn">Guardar</button>
-            </form>
+    <div class="container my-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="fw-bold text-dark"><i class="fas fa-briefcase text-success me-2"></i>Cargos</h2>
+                <p class="text-muted">Gestión de estructura y cargos disponibles.</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newCargoModal">
+                    <i class="fas fa-plus me-1"></i> Nuevo Cargo
+                </button>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Listado de Cargos</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nivel</th>
-                        <th>Depende De</th>
-                        <th>Tipo</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="cargosTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nivel / Estructura</th>
+                                <th>Depende De</th>
+                                <th>Tipo</th>
+                                <th>Detalle / Nombre</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create -->
+    <div class="modal fade" id="newCargoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Crear Nuevo Cargo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="cargoForm">
+                        <div class="mb-3">
+                            <label class="form-label">Nivel</label>
+                            <input type="text" class="form-control" name="nivel" list="nivelesList" required>
+                            <datalist id="nivelesList">
+                                <option value="Central">
+                                <option value="Regional">
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Depende De (Área/Jefatura)</label>
+                            <input type="text" class="form-control" name="dependeDe">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo</label>
+                            <input type="text" class="form-control" name="tipo">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Detalle (Nombre del cargo)</label>
+                            <input type="text" class="form-control" name="detalle" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="cargoForm" class="btn btn-success">Guardar Cargo</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="common.js"></script>
     <script>
-        if (!isAuthenticated()) window.location.href = "index.html";
-        renderNavbar();
+        document.addEventListener('libsLoaded', initApp);
+        if (window.jQuery) initApp();
 
-        async function loadCargos() {
-            const res = await fetchAPI('/cargos');
-            if (!res) return;
-            const data = await res.json();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.idcargo}</td>
-                    <td>${item.nivel || '-'}</td>
-                    <td>${item.dependede || '-'}</td>
-                    <td>${item.tipo || '-'}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deleteCargo(${item.idcargo})">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+        let table;
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('cargos');
+
+            table = $('#cargosTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+                order: [[0, "desc"]],
+                columns: [
+                    { data: "idcargo" },
+                    { data: "nivel", render: (d) => `<span class="badge bg-light text-dark border">${d}</span>` },
+                    { data: "dependede" },
+                    { data: "tipo" },
+                    { data: "detalle", className: "fw-bold" },
+                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deleteCargo(${d.idcargo})"><i class="fas fa-trash"></i></button>` }
+                ]
+            });
+
+            loadData();
+
+            $('#cargoForm').on('submit', async function (e) {
+                e.preventDefault();
+                const btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true);
+
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+
+                const res = await fetchAPI('/cargos', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (res && res.ok) {
+                    showToast("Cargo creado correctamente");
+                    $('#newCargoModal').modal('hide');
+                    this.reset();
+                    loadData();
+                } else {
+                    showToast("Error al crear cargo", "error");
+                }
+                btn.prop('disabled', false);
             });
         }
 
-        document.getElementById('cargoForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const body = {
-                nivel: document.getElementById('nivel').value,
-                dependeDe: document.getElementById('dependeDe').value,
-                tipo: document.getElementById('tipo').value,
-                detalle: document.getElementById('detalle').value
-            };
-
-            const res = await fetchAPI('/cargos', {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
-
-            if (res && res.ok) {
-                alert("Cargo creado correctamente");
-                document.getElementById('cargoForm').reset();
-                loadCargos();
-            } else {
-                alert("Error al crear cargo");
+        async function loadData() {
+            const res = await fetchAPI('/cargos');
+            if (res) {
+                const data = await res.json();
+                table.clear().rows.add(data).draw();
             }
-        });
+        }
 
         async function deleteCargo(id) {
-            if (!confirm("¿Seguro que desea eliminar este cargo?")) return;
+            if (!confirm("¿Eliminar este cargo?")) return;
             const res = await fetchAPI(`/cargos/${id}`, { method: 'DELETE' });
-            if (res && res.ok) loadCargos();
+            if (res && res.ok) {
+                showToast("Cargo eliminado");
+                loadData();
+            }
         }
-
-        loadCargos();
     </script>
 </body>
 

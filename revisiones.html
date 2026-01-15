@@ -3,125 +3,326 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Revisiones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisiones - Gestión Candidatos</title>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Gestión de Revisiones</h1>
 
-        <div class="card">
-            <h3>Nueva Revisión</h3>
-            <form id="revForm">
-                <label>Seleccionar Postulación:</label>
-                <select id="idPostulacion" required>
-                    <option value="">Cargando...</option>
-                </select>
-
-                <input type="text" id="tipoCandidatura" placeholder="Tipo Candidatura">
-                <input type="text" id="prioridad" placeholder="Prioridad">
-                <input type="text" id="estado" placeholder="Estado">
-                <input type="text" id="fitPolitico" placeholder="Fit Político">
-                <textarea id="comentarios" placeholder="Comentarios"></textarea>
-                <textarea id="analisisCvIa" placeholder="Análisis IA"></textarea>
-
-                <button type="submit" class="btn">Crear Revisión</button>
-            </form>
+    <div class="container my-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="fw-bold text-dark"><i class="fas fa-clipboard-check text-danger me-2"></i>Revisiones</h2>
+                <p class="text-muted">Evaluación detallada de postulaciones.</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#newRevModal">
+                    <i class="fas fa-plus me-1"></i> Nueva Revisión
+                </button>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Listado de Revisiones</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Candidato</th>
-                        <th>Estado</th>
-                        <th>Prioridad</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="revTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Candidato</th>
+                                <th>Cargo Postulado</th>
+                                <th>Estado</th>
+                                <th>Prioridad</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create -->
+    <div class="modal fade" id="newRevModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Nueva Revisión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="revForm">
+
+                        <!-- Filters Section -->
+                        <div class="card bg-light border-0 mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold mb-3">Buscar Postulación</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label small">Filtrar por Candidato</label>
+                                        <input type="text" id="filterPersona" class="form-control"
+                                            placeholder="Escriba nombre o RUT...">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Nivel Cargo</label>
+                                        <select id="cF_Nivel" class="form-select">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Depende De</label>
+                                        <select id="cF_Depende" class="form-select">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small">Tipo Cargo</label>
+                                        <select id="cF_Tipo" class="form-select">
+                                            <option value="">Todos</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Seleccionar Postulación a Revisar</label>
+                            <select id="idPostulacion" class="form-select select2-post" required style="width: 100%;">
+                                <option value="">-- Utilice filtros para buscar --</option>
+                            </select>
+                        </div>
+
+                        <hr>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo Candidatura</label>
+                                <select class="form-select" name="tipoCandidatura">
+                                    <option value="Es postulación espontánea">Es postulación espontánea</option>
+                                    <option value="Sugerencia de partido">Sugerencia de partido</option>
+                                    <option value="Búsqueda ejecutiva">Búsqueda ejecutiva</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Prioridad</label>
+                                <select class="form-select" name="prioridad">
+                                    <option value="Alta">Alta</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Baja">Baja</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" name="estado">
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Revisión CV">Revisión CV</option>
+                                    <option value="Preseleccionado">Preseleccionado</option>
+                                    <option value="Seleccionado">Seleccionado</option>
+                                    <option value="Finalizado">Finalizado</option>
+                                    <option value="Rechazado">Rechazado</option>
+                                    <option value="Cargo No Disponible">Cargo No Disponible</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fit Político</label>
+                                <select class="form-select" name="fitPolitico">
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="Alto">Alto</option>
+                                    <option value="Medio">Medio</option>
+                                    <option value="Bajo">Bajo</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Comentarios</label>
+                                <textarea class="form-control" name="comentarios" rows="3"></textarea>
+                            </div>
+                            <div class="col-12" style="display: none;">
+                                <label class="form-label">Análisis IA</label>
+                                <textarea class="form-control bg-light" name="analisisCvIa" rows="3"
+                                    placeholder="Pegar análisis automático aquí..."></textarea>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="revForm" class="btn btn-danger">Guardar Revisión</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="common.js"></script>
     <script>
-        if (!isAuthenticated()) window.location.href = "index.html";
-        renderNavbar();
+        document.addEventListener('libsLoaded', initApp);
+        if (window.jQuery) initApp();
 
-        async function loadPostulaciones() {
-            const res = await fetchAPI('/postulaciones');
+        let table;
+        let allPostulaciones = [];
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('revisiones');
+
+            // Init DataTables
+            table = $('#revTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+                order: [[0, "desc"]],
+                columns: [
+                    { data: "idrevision" },
+                    { data: null, render: (d) => `<div class="fw-bold">${d.nombres} ${d.apellidopaterno || ''}</div><div class="small text-muted">${d.rut}</div>` },
+                    { data: null, render: (d) => `${d.cargo_tipo || ''} - ${d.cargo_detalle || ''} <span class="badge bg-secondary ms-1">${d.cargo_nivel || ''}</span>` },
+                    { data: "estado", render: (d) => `<span class="badge ${getStatusBadge(d)}">${d}</span>` },
+                    { data: "prioridad" },
+                    { data: "fecharevision", render: (d) => new Date(d).toLocaleDateString() },
+                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deleteRev(${d.idrevision})"><i class="fas fa-trash"></i></button>` }
+                ]
+            });
+
+            // Init Select2
+            $('#idPostulacion').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#newRevModal'),
+                placeholder: "Seleccione una postulación..."
+            });
+
+            loadData();
+            initFilters();
+
+            $('#revForm').on('submit', async function (e) {
+                e.preventDefault();
+                const btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true);
+
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                // Add select manually if outside normal flow or needing ID
+                data.idPostulacion = $('#idPostulacion').val();
+
+                const res = await fetchAPI('/revisiones', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (res && res.ok) {
+                    showToast("Revisión creada");
+                    $('#newRevModal').modal('hide');
+                    this.reset();
+                    $('#idPostulacion').val(null).trigger('change');
+                    loadData();
+                } else {
+                    showToast("Error al guardar", "error");
+                }
+                btn.prop('disabled', false);
+            });
+        }
+
+        async function loadData() {
+            // Load Revisions
+            const res = await fetchAPI('/revisiones');
             if (res) {
-                const posts = await res.json();
-                const sel = document.getElementById('idPostulacion');
-                sel.innerHTML = '<option value="">-- Seleccione Postulación --</option>';
-                posts.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.idpostulacion;
-                    opt.textContent = `ID ${p.idpostulacion} - ${p.nombres} ${p.apellidopaterno}`;
-                    sel.appendChild(opt);
+                const data = await res.json();
+                table.clear().rows.add(data).draw();
+            }
+
+            // Load Postulaciones for options
+            const resP = await fetchAPI('/postulaciones');
+            if (resP) {
+                allPostulaciones = await resP.json();
+                updateFilterLists(); // Populate Nivel logic
+                filterPostOptions(); // Initial list
+            }
+        }
+
+        // --- Filter Logic ---
+        function initFilters() {
+            $('#filterPersona').on('keyup', filterPostOptions);
+            $('#cF_Nivel, #cF_Depende, #cF_Tipo').on('change', function () {
+                if (this.id === 'cF_Nivel') updateCascade('nivel');
+                if (this.id === 'cF_Depende') updateCascade('depende');
+                filterPostOptions();
+            });
+        }
+
+        function updateFilterLists() {
+            // Populate Nivel
+            const niveles = [...new Set(allPostulaciones.map(p => p.cargo_nivel).filter(Boolean))].sort();
+            populateSelect('#cF_Nivel', niveles);
+        }
+
+        function updateCascade(changed) {
+            const nivel = $('#cF_Nivel').val();
+
+            if (changed === 'nivel') {
+                // Update Depende based on Nivel
+                let valid = allPostulaciones;
+                if (nivel) valid = valid.filter(p => p.cargo_nivel == nivel);
+                const dependes = [...new Set(valid.map(p => p.cargo_depende).filter(Boolean))].sort();
+                populateSelect('#cF_Depende', dependes);
+                $('#cF_Depende').val('').trigger('change'); // Reset lower
+            }
+            // Similar for Tipo if needed, but simplistic approach is fine for now
+        }
+
+        function populateSelect(selector, values) {
+            const el = $(selector);
+            el.html('<option value="">Todos</option>');
+            values.forEach(v => el.append(new Option(v, v)));
+        }
+
+        function filterPostOptions() {
+            const term = $('#filterPersona').val().toLowerCase();
+            const nivel = $('#cF_Nivel').val();
+            const depende = $('#cF_Depende').val();
+            const tipo = $('#cF_Tipo').val();
+
+            const filtered = allPostulaciones.filter(p => {
+                const text = `${p.nombres} ${p.apellidopaterno} ${p.rut}`.toLowerCase();
+                const matchesText = !term || text.includes(term);
+
+                const matchesNivel = !nivel || p.cargo_nivel == nivel;
+                const matchesDepende = !depende || p.cargo_depende == depende;
+                const matchesTipo = !tipo || p.cargo_tipo == tipo;
+
+                return matchesText && matchesNivel && matchesDepende && matchesTipo;
+            });
+
+            const sel = $('#idPostulacion');
+            sel.empty();
+            if (filtered.length === 0) {
+                sel.append(new Option("No hay coincidencias", ""));
+            } else {
+                sel.append(new Option("Seleccione...", ""));
+                filtered.forEach(p => {
+                    const cargoTxt = `${p.cargo_tipo || ''} - ${p.cargo_detalle || ''} (${p.cargo_nivel})`;
+                    const text = `${p.nombres} ${p.apellidopaterno} | ${cargoTxt}`;
+                    sel.append(new Option(text, p.idpostulacion));
                 });
             }
         }
 
-        async function loadRevisiones() {
-            const res = await fetchAPI('/revisiones');
-            if (!res) return;
-            const data = await res.json();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.idrevision}</td>
-                    <td>${item.nombres || ''} (${item.rut})</td>
-                    <td>${item.estado || '-'}</td>
-                    <td>${item.prioridad || '-'}</td>
-                    <td>${new Date(item.fecharevision).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deleteRev(${item.idrevision})">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        document.getElementById('revForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const body = {
-                idPostulacion: document.getElementById('idPostulacion').value,
-                tipoCandidatura: document.getElementById('tipoCandidatura').value,
-                prioridad: document.getElementById('prioridad').value,
-                estado: document.getElementById('estado').value,
-                fitPolitico: document.getElementById('fitPolitico').value,
-                comentarios: document.getElementById('comentarios').value,
-                analisisCvIa: document.getElementById('analisisCvIa').value
-            };
-
-            const res = await fetchAPI('/revisiones', {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
-
-            if (res && res.ok) {
-                alert("Revisión guardada");
-                loadRevisiones();
-            } else {
-                alert("Error guardando revisión");
+        function getStatusBadge(status) {
+            switch (status) {
+                case 'Pendiente': return 'bg-warning text-dark';
+                case 'En Proceso': return 'bg-info text-dark';
+                case 'Finalizado': return 'bg-success';
+                case 'Rechazado': return 'bg-danger';
+                default: return 'bg-secondary';
             }
-        });
+        }
 
         async function deleteRev(id) {
-            if (!confirm("¿Seguro?")) return;
+            if (!confirm("¿Eliminar?")) return;
             const res = await fetchAPI(`/revisiones/${id}`, { method: 'DELETE' });
-            if (res && res.ok) loadRevisiones();
+            if (res && res.ok) {
+                showToast("Eliminado");
+                loadData();
+            }
         }
-
-        loadPostulaciones();
-        loadRevisiones();
     </script>
 </body>
 

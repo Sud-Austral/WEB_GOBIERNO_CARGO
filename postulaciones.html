@@ -3,131 +3,317 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Postulaciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postulaciones - Gestión Candidatos</title>
+    <!-- common.js loads CSS libs -->
 </head>
 
 <body>
-    <div class="container">
-        <h1>Gestión de Postulaciones</h1>
+    <!-- Nav injected by common.js -->
 
-        <div class="card">
-            <h3>Nueva Postulación</h3>
-            <form id="postForm">
-                <label>Seleccionar Persona:</label>
-                <select id="idPersona" required>
-                    <option value="">Cargando personas...</option>
-                </select>
-
-                <label>Seleccionar Cargo:</label>
-                <select id="idCargo" required>
-                    <option value="">Cargando cargos...</option>
-                </select>
-
-                <button type="submit" class="btn" style="margin-top: 10px;">Crear Postulación</button>
-            </form>
+    <div class="container my-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="fw-bold text-dark"><i class="fas fa-file-signature text-primary me-2"></i>Postulaciones</h2>
+                <p class="text-muted">Administre las postulaciones de candidatos a cargos.</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPostModal">
+                    <i class="fas fa-plus me-1"></i> Nueva Postulación
+                </button>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Listado de Postulaciones</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Candidato</th>
-                        <th>Cargo</th>
-                        <th>Fecha</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="postTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Candidato</th>
+                                <th>Cargo (Tipo - Detalle - Nivel)</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create -->
+    <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Nueva Postulación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="postForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">1. Seleccionar Persona</label>
+                            <select id="idPersona" class="form-select select2-persona" style="width: 100%;" required>
+                                <option value="">Buscar persona...</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">2. Filtrar Cargo</label>
+                            <div class="card bg-light border-0">
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Nivel</label>
+                                            <select id="cF_Nivel" class="form-select select2-simple">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Depende De</label>
+                                            <select id="cF_Depende" class="form-select select2-simple">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small">Tipo</label>
+                                            <select id="cF_Tipo" class="form-select select2-simple">
+                                                <option value="">Todos</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">3. Seleccionar Cargo Final</label>
+                            <select id="idCargo" class="form-select select2-cargo" style="width: 100%;" required>
+                                <option value="">Seleccione filtros primero...</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="postForm" class="btn btn-primary">Guardar Postulación</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="common.js"></script>
     <script>
-        if (!isAuthenticated()) window.location.href = "index.html";
-        renderNavbar();
+        // Wait for libs loaded event from common.js
+        document.addEventListener('libsLoaded', initApp);
 
-        async function loadSelects() {
-            // Cargar Personas
+        // Fallback in case they are cached/fast
+        if (window.jQuery) initApp();
+
+        let allCargos = [];
+        let dataTable;
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('postulaciones');
+
+            // Init DataTables
+            dataTable = $('#postTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+                order: [[0, "desc"]],
+                columns: [
+                    { data: "idpostulacion", width: "5%" },
+                    { data: null, render: (d) => `<div class="fw-bold">${d.nombres} ${d.apellidopaterno}</div><div class="small text-muted">${d.rut || ''}</div>` },
+                    { data: null, render: (d) => `${d.cargo_tipo || '-'} <i class="fas fa-chevron-right text-muted mx-1" style="font-size:0.7em"></i> ${d.cargo_detalle || '-'} <span class="badge bg-secondary ms-2">${d.cargo_nivel || ''}</span>` },
+                    { data: "fechapostulacion", render: (d) => new Date(d).toLocaleDateString() },
+                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deletePost(${d.idpostulacion})"><i class="fas fa-trash"></i></button>` }
+                ]
+            });
+
+            loadData();
+            initFilters();
+
+            // Form Submit
+            $('#postForm').on('submit', async function (e) {
+                e.preventDefault();
+                const btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true);
+
+                const body = {
+                    idPersona: $('#idPersona').val(),
+                    idCargo: $('#idCargo').val()
+                };
+
+                const res = await fetchAPI('/postulaciones', {
+                    method: 'POST',
+                    body: JSON.stringify(body)
+                });
+
+                if (res && res.ok) {
+                    showToast("Postulación creada exitosamente");
+                    $('#newPostModal').modal('hide');
+                    loadData();
+                    // Reset form
+                    $('#idPersona').val(null).trigger('change');
+                    $('#idCargo').empty().trigger('change');
+                } else {
+                    showToast("Error al crear postulación", "error");
+                }
+                btn.prop('disabled', false);
+            });
+        }
+
+        async function loadData() {
+            // Load Table Data
+            const res = await fetchAPI('/postulaciones');
+            if (res) {
+                const data = await res.json();
+                dataTable.clear().rows.add(data).draw();
+            }
+
+            // Load Cargos for memory (filtering)
+            const resC = await fetchAPI('/cargos');
+            if (resC) {
+                allCargos = await resC.json();
+                updateFilterOptions(); // Populate filter dropdowns
+            }
+
+            // Load Personas for Select2
             const resP = await fetchAPI('/personas');
             if (resP) {
                 const personas = await resP.json();
-                const sel = document.getElementById('idPersona');
-                sel.innerHTML = '<option value="">-- Seleccione Persona --</option>';
-                personas.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.idpersona;
-                    opt.textContent = `${p.rut} - ${p.nombres} ${p.apellidopaterno || ''}`;
-                    sel.appendChild(opt);
-                });
-            }
-
-            // Cargar Cargos
-            const resC = await fetchAPI('/cargos');
-            if (resC) {
-                const cargos = await resC.json();
-                const sel = document.getElementById('idCargo');
-                sel.innerHTML = '<option value="">-- Seleccione Cargo --</option>';
-                cargos.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.idcargo;
-                    opt.textContent = `${c.nivel} - ${c.tipo || ''}`;
-                    sel.appendChild(opt);
+                const mapped = personas.map(p => ({
+                    id: p.idpersona,
+                    text: `${p.rut} - ${p.nombres} ${p.apellidopaterno || ''}`
+                }));
+                $('.select2-persona').select2({
+                    theme: 'bootstrap-5',
+                    dropdownParent: $('#newPostModal'),
+                    data: mapped,
+                    placeholder: "Buscar por nombre o RUT..."
                 });
             }
         }
 
-        async function loadPostulaciones() {
-            const res = await fetchAPI('/postulaciones');
-            if (!res) return;
-            const data = await res.json();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.idpostulacion}</td>
-                    <td>${item.nombres || ''} ${item.apellidopaterno || ''}</td>
-                    <td>${item.cargo_nivel || item.idcargo}</td>
-                    <td>${new Date(item.fechapostulacion).toLocaleDateString()}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deletePost(${item.idpostulacion})">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+        function initFilters() {
+            // Init Select2 for filters
+            $('.select2-simple').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#newPostModal'),
+                width: '100%'
+            });
+
+            // Main Cargo select
+            $('#idCargo').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#newPostModal'),
+                placeholder: "Seleccione cargos..."
+            });
+
+            // Events
+            $('#cF_Nivel, #cF_Depende, #cF_Tipo').on('change', function () {
+                updateCargoSelect();
+                // If Nivel changes, update dependents? simple approach: just filter the final list.
+                // Or robust cascade:
+                if (this.id === 'cF_Nivel') updateFilterOptions('nivel');
+                if (this.id === 'cF_Depende') updateFilterOptions('depende');
             });
         }
 
-        document.getElementById('postForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const body = {
-                idPersona: document.getElementById('idPersona').value,
-                idCargo: document.getElementById('idCargo').value
-            };
+        function updateFilterOptions(changedInfo) {
+            // This function is tricky with Select2 active.
+            // We want to avoid infinite loops and maintain state.
+            // Simplified: Just use memory unique values to populate what's possible.
 
-            const res = await fetchAPI('/postulaciones', {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
+            // Ideally:
+            // 1. Get current values
+            const curNivel = $('#cF_Nivel').val();
+            const curDepende = $('#cF_Depende').val();
 
-            if (res && res.ok) {
-                alert("Postulación creada");
-                loadPostulaciones();
+            if (!changedInfo) {
+                // Initial load
+                const niveles = [...new Set(allCargos.map(c => c.nivel).filter(Boolean))].sort();
+                replaceOptions('#cF_Nivel', niveles, curNivel);
+            }
+
+            // Filter for Depende
+            let validCargosForDepende = allCargos;
+            if (curNivel) validCargosForDepende = validCargosForDepende.filter(c => c.nivel == curNivel);
+            const dependes = [...new Set(validCargosForDepende.map(c => c.dependede).filter(Boolean))].sort();
+
+            // Only update Depende if Nivel changed or initial
+            if (!changedInfo || changedInfo === 'nivel') {
+                replaceOptions('#cF_Depende', dependes, null); // Reset selection on cascade
             } else {
-                alert("Error creando postulación");
+                // Keep selection if possible? No, standard cascade usually resets
             }
-        });
+
+            // Filter for Tipo
+            let validCargosForTipo = validCargosForDepende;
+            // Get new depende val after update
+            const newDepende = $('#cF_Depende').val();
+            if (newDepende) validCargosForTipo = validCargosForTipo.filter(c => c.dependede == newDepende);
+
+            const tipos = [...new Set(validCargosForTipo.map(c => c.tipo).filter(Boolean))].sort();
+            if (!changedInfo || changedInfo === 'nivel' || changedInfo === 'depende') {
+                replaceOptions('#cF_Tipo', tipos, null);
+            }
+
+            updateCargoSelect();
+        }
+
+        function replaceOptions(selector, values, selected) {
+            const el = $(selector);
+            el.empty();
+            el.append('<option value="">Todos</option>');
+            values.forEach(v => {
+                const opt = new Option(v, v, false, v === selected);
+                el.append(opt);
+            });
+            el.trigger('change.select2'); // Notify select2 but avoid recursive update loop if we check event source carefully
+        }
+
+        function updateCargoSelect() {
+            const nivel = $('#cF_Nivel').val();
+            const depende = $('#cF_Depende').val();
+            const tipo = $('#cF_Tipo').val();
+
+            let filtered = allCargos.filter(c =>
+                (!nivel || c.nivel == nivel) &&
+                (!depende || c.dependede == depende) &&
+                (!tipo || c.tipo == tipo)
+            );
+
+            // Sort
+            filtered.sort((a, b) => (a.tipo || '').localeCompare(b.tipo || '') || (a.detalle || '').localeCompare(b.detalle || ''));
+
+            // Rebuild Select2
+            const el = $('#idCargo');
+            el.empty();
+            if (filtered.length === 0) {
+                el.append('<option value="">No se encontraron cargos</option>');
+            } else {
+                el.append('<option value="">Seleccione Cargo...</option>');
+                filtered.forEach(c => {
+                    // Format: Tipo - Detalle - Nivel
+                    const text = `${c.tipo || ''} - ${c.detalle || ''} - ${c.nivel || ''}`;
+                    el.append(new Option(text, c.idcargo));
+                });
+            }
+            el.trigger('change');
+        }
 
         async function deletePost(id) {
-            if (!confirm("¿Seguro?")) return;
+            if (!confirm("¿Está seguro de eliminar esta postulación?")) return;
             const res = await fetchAPI(`/postulaciones/${id}`, { method: 'DELETE' });
-            if (res && res.ok) loadPostulaciones();
+            if (res && res.ok) {
+                showToast("Eliminado correctamente");
+                loadData();
+            }
         }
-
-        loadSelects();
-        loadPostulaciones();
     </script>
 </body>
 

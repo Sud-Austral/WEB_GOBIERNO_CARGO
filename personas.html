@@ -3,119 +3,173 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Personas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personas - Gestión Candidatos</title>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Gestión de Personas</h1>
 
-        <div class="card">
-            <h3>Nueva Persona</h3>
-            <form id="personaForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <input type="text" id="rut" placeholder="RUT *" required>
-                <input type="text" id="nombres" placeholder="Nombres *" required>
-                <input type="text" id="apellidoPaterno" placeholder="Apellido Paterno">
-                <input type="text" id="apellidoMaterno" placeholder="Apellido Materno">
-                <input type="date" id="fechaNacimiento" placeholder="Fecha Nacimiento">
-                <input type="text" id="genero" placeholder="Género">
-                <input type="text" id="nacionalidad" placeholder="Nacionalidad">
-                <input type="email" id="correoElectronico" placeholder="Email">
-                <input type="text" id="telefonoCelular" placeholder="Teléfono">
-                <input type="text" id="regionResidencia" placeholder="Región">
-                <input type="text" id="profesion" placeholder="Profesión">
-                <input type="text" id="gradoAcademico" placeholder="Grado Académico">
-                <input type="text" id="partidoPolitico" placeholder="Partido Político">
-                <input type="text" id="cvUrl" placeholder="URL CV">
-                <textarea id="antecedentes" placeholder="Antecedentes" style="grid-column: span 2"></textarea>
-                <textarea id="observaciones" placeholder="Observaciones" style="grid-column: span 2"></textarea>
-                <textarea id="referencias" placeholder="Referencias" style="grid-column: span 2"></textarea>
-
-                <button type="submit" class="btn" style="grid-column: span 2">Guardar Persona</button>
-            </form>
+    <div class="container my-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="fw-bold text-dark"><i class="fas fa-users text-primary me-2"></i>Personas</h2>
+                <p class="text-muted">Base de datos de todos los candidatos registrados.</p>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPersonaModal">
+                    <i class="fas fa-plus me-1"></i> Nueva Persona
+                </button>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Listado de Personas</h3>
-            <div style="overflow-x: auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>RUT</th>
-                            <th>Nombre Completo</th>
-                            <th>Profesión</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="personasTable" class="table table-hover align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>RUT</th>
+                                <th>Nombre Completo</th>
+                                <th>Correo</th>
+                                <th>Teléfono</th>
+                                <th>Región</th>
+                                <th>Profesión</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Create -->
+    <div class="modal fade" id="newPersonaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Registrar Nueva Persona</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="personaForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">RUT</label>
+                            <input type="text" class="form-control" name="rut" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nombres</label>
+                            <input type="text" class="form-control" name="nombres" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Apellido Paterno</label>
+                            <input type="text" class="form-control" name="apellidoPaterno" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" name="correoElectronico">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" name="telefonoCelular">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Región</label>
+                            <input type="text" class="form-control" name="regionResidencia">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Profesión</label>
+                            <input type="text" class="form-control" name="profesion">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-control" name="observaciones" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="personaForm" class="btn btn-primary">Guardar Registro</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="common.js"></script>
     <script>
-        if (!isAuthenticated()) window.location.href = "index.html";
-        renderNavbar();
+        document.addEventListener('libsLoaded', initApp);
+        if (window.jQuery) initApp();
 
-        async function loadPersonas() {
-            const res = await fetchAPI('/personas');
-            if (!res) return;
-            const data = await res.json();
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.idpersona}</td>
-                    <td>${item.rut || '-'}</td>
-                    <td>${item.nombres} ${item.apellidopaterno || ''}</td>
-                    <td>${item.profesion || '-'}</td>
-                    <td>
-                        <button class="btn btn-danger" onclick="deletePersona(${item.idpersona})">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+        let table;
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('personas');
+
+            table = $('#personasTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
+                order: [[0, "desc"]],
+                columns: [
+                    { data: "idpersona" },
+                    { data: "rut" },
+                    { data: null, render: (d) => `<b>${d.nombres}</b> ${d.apellidopaterno || ''} ${d.apellidomaterno || ''}` },
+                    { data: "correoelectronico" },
+                    { data: "telefonocelular" },
+                    { data: "regionresidencia" },
+                    { data: "profesion" },
+                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deletePersona(${d.idpersona})"><i class="fas fa-trash"></i></button>` }
+                ]
+            });
+
+            loadData();
+
+            $('#personaForm').on('submit', async function (e) {
+                e.preventDefault();
+                const btn = $(this).find('button[type="submit"]');
+                btn.prop('disabled', true);
+
+                // Collect data
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+
+                const res = await fetchAPI('/personas', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (res && res.ok) {
+                    showToast("Persona registrada correctamente");
+                    $('#newPersonaModal').modal('hide');
+                    this.reset();
+                    loadData();
+                } else {
+                    showToast("Error al registrar", "error");
+                }
+                btn.prop('disabled', false);
             });
         }
 
-        document.getElementById('personaForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fields = [
-                "rut", "nombres", "apellidoPaterno", "apellidoMaterno", "fechaNacimiento",
-                "genero", "nacionalidad", "correoElectronico", "telefonoCelular",
-                "regionResidencia", "profesion", "gradoAcademico", "partidoPolitico",
-                "cvUrl", "antecedentes", "observaciones", "referencias"
-            ];
-
-            const body = {};
-            fields.forEach(f => {
-                const val = document.getElementById(f).value;
-                if (val) body[f] = val;
-            });
-
-            const res = await fetchAPI('/personas', {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
-
-            if (res && res.ok) {
-                alert("Persona creada correctamente");
-                document.getElementById('personaForm').reset();
-                loadPersonas();
-            } else {
-                alert("Error al crear persona");
+        async function loadData() {
+            const res = await fetchAPI('/personas');
+            if (res) {
+                const data = await res.json();
+                table.clear().rows.add(data).draw();
             }
-        });
+        }
 
         async function deletePersona(id) {
-            if (!confirm("¿Seguro que desea eliminar esta persona?")) return;
+            if (!confirm("¿Eliminar este registro? Esta acción es irreversible.")) return;
             const res = await fetchAPI(`/personas/${id}`, { method: 'DELETE' });
-            if (res && res.ok) loadPersonas();
+            if (res && res.ok) {
+                showToast("Registro eliminado");
+                loadData();
+            }
         }
-
-        loadPersonas();
     </script>
 </body>
 

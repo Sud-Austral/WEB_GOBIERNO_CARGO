@@ -3,25 +3,99 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - App Candidatos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gestión Candidatos</title>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Bienvenido, <span id="userName">Usuario</span></h1>
-        <div class="card">
-            <h3>Resumen</h3>
-            <p>Seleccione una opción del menú para comenzar a gestionar.</p>
+
+    <div class="container my-5">
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card bg-primary text-white border-0 shadow-lg"
+                    style="background: linear-gradient(45deg, #0d6efd, #0a58ca);">
+                    <div class="card-body p-5">
+                        <h1 class="display-5 fw-bold mb-3">Bienvenido al Portal de Gestión</h1>
+                        <p class="lead mb-0">Administre el ciclo de vida de los candidatos, desde la postulación hasta
+                            la revisión final.</p>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <div class="row g-4">
+            <!-- Card Personas -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-users text-primary fs-3"></i>
+                        </div>
+                        <h5 class="fw-bold">Personas</h5>
+                        <p class="text-muted small">Base de datos de candidatos y perfiles.</p>
+                        <a href="personas.html" class="btn btn-outline-primary btn-sm mt-2 stretched-link">Gestionar</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Cargos -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-briefcase text-success fs-3"></i>
+                        </div>
+                        <h5 class="fw-bold">Cargos</h5>
+                        <p class="text-muted small">Estructura organizacional y vacantes.</p>
+                        <a href="cargos.html" class="btn btn-outline-success btn-sm mt-2 stretched-link">Gestionar</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Postulaciones -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-file-signature text-warning fs-3"></i>
+                        </div>
+                        <h5 class="fw-bold">Postulaciones</h5>
+                        <p class="text-muted small">Aplicaciones de candidatos a cargos.</p>
+                        <a href="postulaciones.html"
+                            class="btn btn-outline-warning btn-sm mt-2 stretched-link">Gestionar</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Revisiones -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 shadow-sm border-0 hover-card">
+                    <div class="card-body text-center p-4">
+                        <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center mb-3"
+                            style="width: 60px; height: 60px;">
+                            <i class="fas fa-clipboard-check text-danger fs-3"></i>
+                        </div>
+                        <h5 class="fw-bold">Revisiones</h5>
+                        <p class="text-muted small">Evaluación y seguimiento de procesos.</p>
+                        <a href="revisiones.html"
+                            class="btn btn-outline-danger btn-sm mt-2 stretched-link">Gestionar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script src="common.js"></script>
     <script>
-        if (!isAuthenticated()) {
-            window.location.href = "index.html";
-        }
-        renderNavbar();
-        document.getElementById('userName').textContent = localStorage.getItem('user_name') || 'Usuario';
+        document.addEventListener('libsLoaded', () => {
+            renderLayout('dashboard');
+            // Add hover effect style dynamically if desired or just rely on CSS
+        });
+        if (window.isAuthenticated && isAuthenticated()) renderLayout('dashboard'); // Fallback
     </script>
 </body>
 
