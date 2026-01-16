@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selección de Candidatos - Gestión Candidatos</title>
+</head>
+
+<body>
+
+    <div class="container-fluid my-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h2 class="fw-bold text-dark"><i class="fas fa-users-cog text-success me-2"></i>Selección de Candidatos
+                </h2>
+                <p class="text-muted">Compare y seleccione el mejor candidato para cada cargo.</p>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card shadow-sm mb-4 bg-light border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label small">Buscar Texto</label>
+                        <input type="text" id="filterSearch" class="form-control" placeholder="Nombre...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Cargo</label>
+                        <select id="filterCargo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Nivel</label>
+                        <select id="filterNivel" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Depende De</label>
+                        <select id="filterDepende" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Tipo</label>
+                        <select id="filterTipo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Estado</label>
+                        <select id="filterEstado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Revisión CV">Revisión CV</option>
+                            <option value="Preseleccionado">Preseleccionado</option>
+                            <option value="Seleccionado">Seleccionado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsContainer">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Seleccione un cargo para ver los candidatos postulados.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Detailed Info Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Información Detallada del Candidato</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="detailContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfViewerModal" class="pdf-viewer-modal">
+        <div class="pdf-viewer-header">
+            <h5><i class="fas fa-file-pdf text-danger me-2"></i><span id="viewerDocName">Documento</span></h5>
+            <div>
+                <button class="btn btn-sm btn-light me-2" onclick="downloadCurrentDoc()">
+                    <i class="fas fa-download"></i> Descargar
+                </button>
+                <button class="btn-close-viewer" onclick="closePdfViewer()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="pdf-viewer-body">
+            <div id="viewerLoading" class="text-center p-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Cargando documento...</p>
+            </div>
+            <iframe id="pdfFrame" style="display:none;"></iframe>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        document.addEventListener('libsLoaded', initApp);
+        if (window.jQuery && $.fn && $.fn.DataTable) initApp();
+
+        let allRevisiones = [];
+        let currentBlobUrl = null;
+        let currentDocId = null;
+        let currentDocName = '';
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('seleccion');
+
+            loadData();
+            initEventListeners();
+        }
+
+        async function loadData(preserveFilters = false) {
+            // Add timestamp to prevent caching
+            const res = await fetchAPI(`/revisiones?t=${new Date().getTime()}`);
+            if (res) {
+                allRevisiones = await res.json();
+                populateFilters(allRevisiones, preserveFilters);
+            }
+        }
+
+        function initEventListeners() {
+            // Multidirectional Filters
+            $('#filterCargo').on('change', function () {
+                updateAllFilters('cargo');
+                filterAndDisplay();
+            });
+            $('#filterNivel').on('change', function () {
+                updateAllFilters('nivel');
+                filterAndDisplay();
+            });
+            $('#filterDepende').on('change', function () {
+                updateAllFilters('depende');
+                filterAndDisplay();
+            });
+            $('#filterTipo').on('change', function () {
+                updateAllFilters('tipo');
+                filterAndDisplay();
+            });
+            $('#filterEstado').on('change', filterAndDisplay);
+            $('#filterSearch').on('keyup', filterAndDisplay);
+        }
+
+        function populateFilters(data, preserve = false) {
+            // Get current values if we need to preserve them
+            const currentCargo = preserve ? $('#filterCargo').val() : '';
+            const currentNivel = preserve ? $('#filterNivel').val() : '';
+            const currentDepende = preserve ? $('#filterDepende').val() : '';
+            const currentTipo = preserve ? $('#filterTipo').val() : '';
+
+            // Reset logic: populate main filters based on FULL data first
+            const cargos = [...new Set(data.map(d => d.cargo_detalle).filter(Boolean))].sort();
+            const niveles = [...new Set(data.map(d => d.cargo_nivel).filter(Boolean))].sort();
+
+            fillSelect('#filterCargo', cargos, currentCargo);
+            fillSelect('#filterNivel', niveles, currentNivel);
+
+            // If we are preserving, we might need to set the others too before triggering update
+            if (preserve) {
+                // We rely on updateAllFilters to fix the dependent dropdowns (Depende, Tipo)
+                // based on the preserved Cargo/Nivel
+            }
+
+            updateAllFilters('init');
+        }
+
+        function updateAllFilters(changedFilter) {
+            const currentFilters = {
+                cargo: $('#filterCargo').val(),
+                nivel: $('#filterNivel').val(),
+                depende: $('#filterDepende').val(),
+                tipo: $('#filterTipo').val()
+            };
+
+            // Helper to get options based on other filters
+            const getOptions = (excludeField) => {
+                return allRevisiones.filter(d => {
+                    if (excludeField !== 'cargo' && currentFilters.cargo && d.cargo_detalle !== currentFilters.cargo) return false;
+                    if (excludeField !== 'nivel' && currentFilters.nivel && d.cargo_nivel !== currentFilters.nivel) return false;
+                    if (excludeField !== 'depende' && currentFilters.depende && d.cargo_depende !== currentFilters.depende) return false;
+                    if (excludeField !== 'tipo' && currentFilters.tipo && d.cargo_tipo !== currentFilters.tipo) return false;
+                    return true;
+                });
+            };
+
+            // Update Cargo options (based on Nivel, Depende, Tipo)
+            if (changedFilter !== 'cargo') {
+                const filtered = getOptions('cargo');
+                const cargos = [...new Set(filtered.map(d => d.cargo_detalle).filter(Boolean))].sort();
+                fillSelect('#filterCargo', cargos, currentFilters.cargo);
+            }
+
+            // Update Nivel options (based on Cargo, Depende, Tipo)
+            if (changedFilter !== 'nivel') {
+                const filtered = getOptions('nivel');
+                const niveles = [...new Set(filtered.map(d => d.cargo_nivel).filter(Boolean))].sort();
+                fillSelect('#filterNivel', niveles, currentFilters.nivel);
+            }
+
+            // Update Depende options (based on Cargo, Nivel, Tipo)
+            if (changedFilter !== 'depende') {
+                const filtered = getOptions('depende');
+                const dependes = [...new Set(filtered.map(d => d.cargo_depende).filter(Boolean))].sort();
+                fillSelect('#filterDepende', dependes, currentFilters.depende);
+            }
+
+            // Update Tipo options (based on Cargo, Nivel, Depende)
+            if (changedFilter !== 'tipo') {
+                const filtered = getOptions('tipo');
+                const tipos = [...new Set(filtered.map(d => d.cargo_tipo).filter(Boolean))].sort();
+                fillSelect('#filterTipo', tipos, currentFilters.tipo);
+            }
+        }
+
+        function fillSelect(selector, values, currentSelection) {
+            const el = $(selector);
+            const current = currentSelection !== undefined ? currentSelection : el.val();
+            if (selector !== '#filterEstado') {
+                el.empty().append('<option value="">Todos</option>');
+                values.forEach(v => el.append(new Option(v, v)));
+            }
+            if (current && values.includes(current)) el.val(current);
+            else if (current && selector !== '#filterEstado') el.val('');
+        }
+
+        function clearFilters() {
+            $('#filterSearch').val('');
+            $('#filterEstado').val('');
+            $('#filterCargo').val('').trigger('change');
+            filterAndDisplay();
+        }
+
+        function filterAndDisplay() {
+            const search = $('#filterSearch').val().toLowerCase();
+            const cargo = $('#filterCargo').val();
+            const nivel = $('#filterNivel').val();
+            const depende = $('#filterDepende').val();
+            const tipo = $('#filterTipo').val();
+            const estado = $('#filterEstado').val();
+
+            let filtered = allRevisiones.filter(d => {
+                const matchesSearch = !search ||
+                    (d.nombres && d.nombres.toLowerCase().includes(search)) ||
+                    (d.apellidopaterno && d.apellidopaterno.toLowerCase().includes(search)) ||
+                    (d.rut && d.rut.toLowerCase().includes(search));
+
+                const matchesCargo = !cargo || d.cargo_detalle == cargo;
+                const matchesNivel = !nivel || d.cargo_nivel == nivel;
+                const matchesDepende = !depende || d.cargo_depende == depende;
+                const matchesTipo = !tipo || d.cargo_tipo == tipo;
+                const matchesEstado = !estado || d.estado == estado;
+
+                return matchesSearch && matchesCargo && matchesNivel && matchesDepende && matchesTipo && matchesEstado;
+            });
+
+            displayCandidates(filtered);
+        }
+
+        function displayCandidates(candidates) {
+            const container = $('#resultsContainer');
+
+            if (candidates.length === 0) {
+                container.html(`
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No se encontraron candidatos con los filtros seleccionados.
+                    </div>
+                `);
+                return;
+            }
+
+            // A. Pre-calculate selected candidates globally
+            // Map: Person identifier -> Selected Cargo Details
+            const globallySelectedMap = {};
+            allRevisiones.forEach(r => {
+                if (r.estado === 'Seleccionado') {
+                    const key = r.rut || `${r.nombres}|${r.apellidopaterno}`;
+                    // Format: Tipo - Cargo - Nivel - Depende De
+                    globallySelectedMap[key] = `${r.cargo_tipo || ''} - ${r.cargo_detalle || ''} - ${r.cargo_nivel || ''} - ${r.cargo_depende || ''}`;
+                }
+            });
+
+            // Group by cargo
+            const byCargo = {};
+            candidates.forEach(c => {
+                const key = c.cargo_detalle || 'Sin cargo';
+                if (!byCargo[key]) byCargo[key] = [];
+                byCargo[key].push(c);
+            });
+
+            let html = '';
+            Object.keys(byCargo).forEach(cargoName => {
+                const groupCandidates = byCargo[cargoName];
+                const firstCandidate = groupCandidates[0];
+
+                html += `
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-briefcase me-2"></i>${cargoName}
+                                <span class="badge bg-light text-dark ms-2">${firstCandidate.cargo_nivel || ''}</span>
+                            </h5>
+                            <small>${firstCandidate.cargo_tipo || ''} - ${firstCandidate.cargo_depende || ''}</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                `;
+
+                groupCandidates.forEach(c => {
+                    const statusClass = getStatusBadgeClass(c.estado);
+                    const personKey = c.rut || `${c.nombres}|${c.apellidopaterno}`;
+                    const selectedElsewhereCargo = globallySelectedMap[personKey];
+
+                    // Is selected elsewhere AND NOT in this specific revision?
+                    // (Ensure we don't flag the candidate selected for THIS cargo as "elsewhere")
+                    const isSelectedElsewhere = selectedElsewhereCargo && c.estado !== 'Seleccionado';
+
+                    let cardBorderClass = isSelectedElsewhere ? 'border-danger border-2' : 'border';
+                    if (c.estado === 'Seleccionado') cardBorderClass = 'border-success border-3';
+
+                    html += `
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 ${cardBorderClass}">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <h6 class="mb-0">${c.nombres} ${c.apellidopaterno || ''}</h6>
+                                        <span class="badge ${statusClass}">${c.estado}</span>
+                                    </div>
+
+                                    ${isSelectedElsewhere ? `
+                                        <div class="alert alert-danger p-2 small mb-2">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            <strong>Actualmente elegido para:</strong><br>
+                                            ${selectedElsewhereCargo}
+                                        </div>
+                                    ` : ''}
+
+                                    <p class="small mb-2"><strong>RUT:</strong> ${c.rut || '-'}</p>
+                                    <p class="small mb-2"><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
+                                    <p class="small mb-2"><strong>Fit Político:</strong> ${c.fit_politico || '-'}</p>
+                                    <p class="small mb-2"><strong>Revisión CSIA:</strong> ${c.revisioncsia || 'No'}</p>
+                                    <p class="small mb-2"><strong>Fecha Revisión:</strong> ${new Date(c.fecharevision).toLocaleDateString()}</p>
+
+                                    ${c.comentarios ? `
+                                        <div class="bg-light p-2 rounded small mb-3">
+                                            <strong>Comentarios:</strong>
+                                            <p class="mb-0">${c.comentarios.substring(0, 100)}${c.comentarios.length > 100 ? '...' : ''}</p>
+                                        </div>
+                                    ` : ''}
+
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-sm btn-outline-info" onclick="showDetailModal(${c.idrevision})">
+                                            <i class="fas fa-info-circle me-1"></i> Ver Detalles
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewCandidateDocs(${c.idpostulacion})">
+                                            <i class="fas fa-file-pdf me-1"></i> Ver CV
+                                        </button>
+                                        ${c.estado !== 'Seleccionado' ? `
+                                            <button class="btn btn-sm ${isSelectedElsewhere ? 'btn-outline-danger' : 'btn-success'}" onclick="selectCandidate(${c.idrevision}, '${cargoName}')">
+                                                <i class="fas fa-check me-1"></i> ${isSelectedElsewhere ? 'Mover y Seleccionar' : 'Seleccionar'}
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                <i class="fas fa-star me-1"></i> Ya Seleccionado
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.html(html);
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'Pendiente': return 'bg-warning text-dark';
+                case 'Revisión CV': return 'bg-info text-dark';
+                case 'Preseleccionado': return 'bg-primary';
+                case 'Seleccionado': return 'bg-success';
+                case 'Finalizado': return 'bg-dark';
+                case 'Rechazado': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
+        }
+
+        async function viewCandidateDocs(postulacionId) {
+            // Get persona ID from postulacion
+            const postRes = await fetchAPI(`/postulaciones`);
+            if (!postRes) return;
+
+            const postulaciones = await postRes.json();
+            const postulacion = postulaciones.find(p => p.idpostulacion == postulacionId);
+
+            if (!postulacion) {
+                showToast("No se encontró la postulación", "error");
+                return;
+            }
+
+            // Get documents for this persona
+            const docsRes = await fetchAPI(`/personas/${postulacion.idpersona}/documentos`);
+            if (!docsRes) {
+                showToast("Error al cargar documentos", "error");
+                return;
+            }
+
+            const docs = await docsRes.json();
+            if (docs.length === 0) {
+                showToast("No hay documentos disponibles", "warning");
+                return;
+            }
+
+            // Open the first document (CV)
+            const cvDoc = docs.find(d => d.nombre && d.nombre.toLowerCase().includes('cv')) || docs[0];
+            openPdfViewer(cvDoc.documento_id, cvDoc.nombre || cvDoc.archivo_nombre);
+        }
+
+        async function showDetailModal(revisionId) {
+            const revision = allRevisiones.find(r => r.idrevision == revisionId);
+            if (!revision) return;
+
+            // Get full persona data
+            const postRes = await fetchAPI('/postulaciones');
+            if (!postRes) return;
+
+            const postulaciones = await postRes.json();
+            const postulacion = postulaciones.find(p => p.idpostulacion == revision.idpostulacion);
+
+            if (!postulacion) return;
+
+            const personaRes = await fetchAPI(`/personas/${postulacion.idpersona}`);
+            if (!personaRes) return;
+
+            const persona = await personaRes.json();
+
+            const html = `
+                <div class="row g-3">
+                    <div class="col-12">
+                        <h6 class="text-primary border-bottom pb-2"><i class="fas fa-user me-2"></i>Información Personal</h6>
+                    </div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">RUT</label><p>${persona.rut}</p></div>
+                    <div class="col-md-8"><label class="fw-bold small text-muted">Nombre Completo</label><p>${persona.nombres} ${persona.apellidopaterno} ${persona.apellidomaterno || ''}</p></div>
+                    
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Fecha Nacimiento</label><p>${persona.fechanacimiento ? new Date(persona.fechanacimiento).toLocaleDateString() : '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Género</label><p>${persona.genero || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Nacionalidad</label><p>${persona.nacionalidad || '-'}</p></div>
+                    
+                    <div class="col-md-6"><label class="fw-bold small text-muted">Correo</label><p>${persona.correoelectronico || '-'}</p></div>
+                    <div class="col-md-6"><label class="fw-bold small text-muted">Teléfono</label><p>${persona.telefonocelular || '-'}</p></div>
+                    
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Región</label><p>${persona.regionresidencia || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Profesión</label><p>${persona.profesion || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Grado Académico</label><p>${persona.gradoacademico || '-'}</p></div>
+                    
+                    <div class="col-md-12"><label class="fw-bold small text-muted">Partido Político</label><p>${persona.partidopolitico || '-'}</p></div>
+                    
+                    <div class="col-12"><label class="fw-bold small text-muted">Antecedentes</label><p class="bg-light p-2 rounded">${persona.antecedentes || 'Sin antecedentes'}</p></div>
+                    <div class="col-12"><label class="fw-bold small text-muted">Referencias</label><p class="bg-light p-2 rounded">${persona.referencias || 'Sin referencias'}</p></div>
+                    <div class="col-12"><label class="fw-bold small text-muted">Observaciones</label><p class="bg-light p-2 rounded">${persona.observaciones || 'Sin observaciones'}</p></div>
+                    
+                    <div class="col-12">
+                        <h6 class="text-success border-bottom pb-2 mt-3"><i class="fas fa-clipboard-check me-2"></i>Información de Revisión</h6>
+                    </div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Estado</label><p><span class="badge ${getStatusBadgeClass(revision.estado)}">${revision.estado}</span></p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Prioridad</label><p>${revision.prioridad || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Fit Político</label><p>${revision.fit_politico || '-'}</p></div>
+                    
+                    <div class="col-md-6"><label class="fw-bold small text-muted">Revisión CSIA</label><p>${revision.revisioncsia || 'No'}</p></div>
+                    <div class="col-md-6"><label class="fw-bold small text-muted">Fecha Revisión</label><p>${new Date(revision.fecharevision).toLocaleDateString()}</p></div>
+                    
+                    <div class="col-12"><label class="fw-bold small text-muted">Comentarios</label><p class="bg-light p-2 rounded">${revision.comentarios || 'Sin comentarios'}</p></div>
+                    
+                    <div class="col-12">
+                        <h6 class="text-info border-bottom pb-2 mt-3"><i class="fas fa-briefcase me-2"></i>Cargo</h6>
+                    </div>
+                    <div class="col-md-12"><label class="fw-bold small text-muted">Cargo</label><p>${revision.cargo_detalle || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Nivel</label><p>${revision.cargo_nivel || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Tipo</label><p>${revision.cargo_tipo || '-'}</p></div>
+                    <div class="col-md-4"><label class="fw-bold small text-muted">Depende De</label><p>${revision.cargo_depende || '-'}</p></div>
+                </div>
+            `;
+
+            $('#detailContent').html(html);
+            $('#detailModal').modal('show');
+        }
+
+        async function selectCandidate(revisionId, cargoName) {
+            // CRITICAL: Refresh data BEFORE checking current state to avoid race conditions/stale data
+            await loadData(true);
+
+            if (!confirm("¿Desea seleccionar este candidato para el cargo? Esto cambiará el estado de cualquier otro candidato previamente seleccionado para este cargo.")) return;
+
+            // Find the revision to select (from fresh data)
+            const revisionToSelect = allRevisiones.find(r => r.idrevision == revisionId);
+            if (!revisionToSelect) return;
+
+            // 1. Validar si la persona YA está seleccionada en OTRO cargo
+            const samePersonSelectedElsewhere = allRevisiones.find(r =>
+                (r.rut === revisionToSelect.rut || (r.nombres === revisionToSelect.nombres && r.apellidopaterno === revisionToSelect.apellidopaterno)) &&
+                r.estado === 'Seleccionado' &&
+                r.idrevision != revisionId
+            );
+
+            if (samePersonSelectedElsewhere) {
+                const confirmMessage = `ADVERTENCIA: Este candidato (${revisionToSelect.nombres} ${revisionToSelect.apellidopaterno}) YA está seleccionado para el cargo:\n"${samePersonSelectedElsewhere.cargo_detalle}"\n\n¿Desea cambiarlo a este nuevo cargo? El cargo anterior quedará vacante.`;
+                if (!confirm(confirmMessage)) return;
+            }
+
+            // 2. Si estaba seleccionado en otro lado, lo deseleccionamos primero
+            if (samePersonSelectedElsewhere) {
+                const revertOldRes = await fetchAPI(`/revisiones/${samePersonSelectedElsewhere.idrevision}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Preseleccionado' })
+                });
+                if (!revertOldRes || !revertOldRes.ok) {
+                    showToast("Error al revertir la selección anterior del candidato", "error");
+                    return;
+                }
+            }
+
+            // 3. Find if there's already a selected candidate for THIS cargo (to replace them)
+            const currentSelectedForThisCargo = allRevisiones.find(r =>
+                r.cargo_detalle == cargoName &&
+                r.estado === 'Seleccionado' &&
+                r.idrevision != revisionId
+            );
+
+            // If there's a currently selected candidate for this cargo, revert them
+            if (currentSelectedForThisCargo) {
+                const revertRes = await fetchAPI(`/revisiones/${currentSelectedForThisCargo.idrevision}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ estado: 'Preseleccionado' })
+                });
+
+                if (!revertRes || !revertRes.ok) {
+                    showToast("Error al actualizar el candidato anterior de este cargo", "error");
+                    return;
+                }
+            }
+
+            // 4. Select the new candidate
+            const res = await fetchAPI(`/revisiones/${revisionId}`, {
+                method: 'PUT',
+                body: JSON.stringify({ estado: 'Seleccionado' })
+            });
+
+            if (res && res.ok) {
+                let msg = "Candidato seleccionado exitosamente.";
+                if (samePersonSelectedElsewhere) msg += " Se movió del cargo anterior.";
+                if (currentSelectedForThisCargo) msg += " Se reemplazó al candidato previo de este cargo.";
+
+                showToast(msg);
+
+                // Small delay to ensure DB commit
+                setTimeout(async () => {
+                    await loadData(true);
+                    filterAndDisplay();
+                }, 100);
+            } else {
+                showToast("Error al seleccionar candidato", "error");
+            }
+        }
+
+        async function openPdfViewer(docId, docName) {
+            const modal = document.getElementById('pdfViewerModal');
+            const iframe = document.getElementById('pdfFrame');
+            const loading = document.getElementById('viewerLoading');
+            const nameDisplay = document.getElementById('viewerDocName');
+
+            currentDocId = docId;
+            currentDocName = docName;
+
+            nameDisplay.textContent = docName;
+            loading.style.display = 'block';
+            iframe.style.display = 'none';
+            iframe.src = 'about:blank';
+
+            modal.classList.add('active');
+
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_URL}/documentos/${docId}/view`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar el documento');
+                }
+
+                const blob = await response.blob();
+
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                }
+
+                currentBlobUrl = URL.createObjectURL(blob);
+                iframe.src = currentBlobUrl;
+
+                iframe.onload = () => {
+                    loading.style.display = 'none';
+                    iframe.style.display = 'block';
+                };
+
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                loading.innerHTML = '<div class="alert alert-danger">Error al cargar el documento.</div>';
+            }
+        }
+
+        function closePdfViewer() {
+            const modal = document.getElementById('pdfViewerModal');
+            const iframe = document.getElementById('pdfFrame');
+
+            modal.classList.remove('active');
+            iframe.src = 'about:blank';
+
+            if (currentBlobUrl) {
+                URL.revokeObjectURL(currentBlobUrl);
+                currentBlobUrl = null;
+            }
+        }
+
+        async function downloadCurrentDoc() {
+            if (!currentDocId) return;
+
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_URL}/documentos/${currentDocId}/download`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error downloading');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentDocName || 'documento.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showToast("Documento descargado");
+            } catch (error) {
+                console.error('Download error:', error);
+                showToast("Error al descargar", "error");
+            }
+        }
+    </script>
+</body>
+
+</html>

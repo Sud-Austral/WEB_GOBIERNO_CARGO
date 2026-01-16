@@ -161,7 +161,8 @@
     <script src="common.js"></script>
     <script>
         document.addEventListener('libsLoaded', initApp);
-        if (window.jQuery) initApp();
+        // Only init immediately if both jQuery AND DataTables are loaded
+        if (window.jQuery && $.fn && $.fn.DataTable) initApp();
 
         let allCargos = [];
         let allPostulacionesData = [];

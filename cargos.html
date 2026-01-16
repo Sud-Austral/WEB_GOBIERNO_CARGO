@@ -141,7 +141,7 @@
     <script src="common.js"></script>
     <script>
         document.addEventListener('libsLoaded', initApp);
-        if (window.jQuery) initApp();
+        if (window.jQuery && $.fn && $.fn.DataTable) initApp();
 
         let table;
         let allCargosData = [];

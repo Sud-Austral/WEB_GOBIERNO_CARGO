@@ -84,6 +84,63 @@ const STYLES = `
     .select2-container--bootstrap-5 .select2-selection {
         border-color: #dee2e6;
     }
+    
+    /* PDF Viewer Modal */
+    .pdf-viewer-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+        z-index: 9999;
+        display: none;
+        flex-direction: column;
+    }
+    .pdf-viewer-modal.active {
+        display: flex;
+    }
+    .pdf-viewer-header {
+        background: #fff;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .pdf-viewer-header h5 {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .btn-close-viewer {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .btn-close-viewer:hover {
+        background: #bb2d3b;
+    }
+    .pdf-viewer-body {
+        flex: 1;
+        position: relative;
+        background: #525252;
+    }
+    .pdf-viewer-body iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    #viewerLoading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+    }
+
 `;
 
 // --- Loader ---
@@ -174,6 +231,7 @@ function renderLayout(activePage) {
                     <li class="nav-item"><a class="nav-link ${activePage === 'cargos' ? 'active' : ''}" href="cargos.html">Cargos</a></li>
                     <li class="nav-item"><a class="nav-link ${activePage === 'postulaciones' ? 'active' : ''}" href="postulaciones.html">Postulaciones</a></li>
                     <li class="nav-item"><a class="nav-link ${activePage === 'revisiones' ? 'active' : ''}" href="revisiones.html">Revisiones</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'seleccion' ? 'active' : ''}" href="seleccion.html">Selección</a></li>
                 </ul>
                 <div class="d-flex align-items-center">
                     <span class="me-3 text-muted"><i class="fas fa-user-circle me-1"></i> ${user ? user.nombre : 'Usuario'}</span>

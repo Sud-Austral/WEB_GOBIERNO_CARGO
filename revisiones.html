@@ -32,9 +32,15 @@
                     </button>
                 </div>
                 <div class="row g-3">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label small">Buscar Texto</label>
                         <input type="text" id="filterSearch" class="form-control" placeholder="Nombre, cargo...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Cargo</label>
+                        <select id="filterCargo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small">Nivel</label>
@@ -42,14 +48,14 @@
                             <option value="">Todos</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label small">Depende De</label>
                         <select id="filterDepende" class="form-select">
                             <option value="">Todos</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label class="form-label small">Tipo Cargo</label>
+                        <label class="form-label small">Tipo</label>
                         <select id="filterTipo" class="form-select">
                             <option value="">Todos</option>
                         </select>
@@ -230,7 +236,7 @@
     <script src="common.js"></script>
     <script>
         document.addEventListener('libsLoaded', initApp);
-        if (window.jQuery) initApp();
+        if (window.jQuery && $.fn && $.fn.DataTable) initApp();
 
         let table;
         let allPostulaciones = [];
@@ -246,13 +252,15 @@
                 function (settings, data, dataIndex, rowData) {
                     if (settings.nTable.id !== 'revTable') return true;
 
+                    const fCargo = $('#filterCargo').val();
                     const fNivel = $('#filterNivel').val();
                     const fDepende = $('#filterDepende').val();
                     const fTipo = $('#filterTipo').val();
                     const fEstado = $('#filterEstado').val();
 
-                    if (!fNivel && !fDepende && !fTipo && !fEstado) return true;
+                    if (!fCargo && !fNivel && !fDepende && !fTipo && !fEstado) return true;
 
+                    if (fCargo && rowData.cargo_detalle !== fCargo) return false;
                     if (fNivel && rowData.cargo_nivel !== fNivel) return false;
                     if (fDepende && rowData.cargo_depende !== fDepende) return false;
                     if (fTipo && rowData.cargo_tipo !== fTipo) return false;
@@ -343,6 +351,10 @@
 
         function initEventListeners() {
             // Main Filters - Bidirectional Cascading
+            $('#filterCargo').on('change', function () {
+                updateAllFilters('cargo');
+                table.draw();
+            });
             $('#filterNivel').on('change', function () {
                 updateAllFilters('nivel');
                 table.draw();
@@ -374,23 +386,32 @@
 
         // --- MAIN FILTER POPULATION ---
         function populateMainFilters(data) {
+            const cargos = [...new Set(data.map(d => d.cargo_detalle).filter(Boolean))].sort();
             const niveles = [...new Set(data.map(d => d.cargo_nivel).filter(Boolean))].sort();
+            fillSelect('#filterCargo', cargos);
             fillSelect('#filterNivel', niveles);
             updateAllFilters('init');
         }
 
         function updateAllFilters(changedFilter) {
+            const cargo = $('#filterCargo').val();
             const nivel = $('#filterNivel').val();
             const depende = $('#filterDepende').val();
             const tipo = $('#filterTipo').val();
 
             // Filter data based on current selections
             let filtered = allRevisiones;
+            if (cargo) filtered = filtered.filter(d => d.cargo_detalle == cargo);
             if (nivel) filtered = filtered.filter(d => d.cargo_nivel == nivel);
             if (depende) filtered = filtered.filter(d => d.cargo_depende == depende);
             if (tipo) filtered = filtered.filter(d => d.cargo_tipo == tipo);
 
             // Update all dropdowns except the one that changed
+            if (changedFilter !== 'cargo') {
+                const cargos = [...new Set(filtered.map(d => d.cargo_detalle).filter(Boolean))].sort();
+                fillSelect('#filterCargo', cargos, cargo);
+            }
+
             if (changedFilter !== 'nivel') {
                 const niveles = [...new Set(filtered.map(d => d.cargo_nivel).filter(Boolean))].sort();
                 fillSelect('#filterNivel', niveles, nivel);
@@ -421,8 +442,8 @@
         function clearFilters() {
             $('#filterSearch').val('');
             $('#filterEstado').val('');
-            $('#filterNivel').val('').trigger('change');
-            // Don't manually reset depende/tipo - let cascade handle it
+            $('#filterCargo').val('').trigger('change');
+            // Don't manually reset others - let cascade handle it
             table.search('').draw();
         }
 
