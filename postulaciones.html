@@ -252,6 +252,20 @@
                     idCargo: $('#idCargo').val()
                 };
 
+                // DUPLICATE VALIDATION
+                // Check if this same combination already exists
+                const isDuplicate = allPostulacionesData.find(p =>
+                    p.idpersona == body.idPersona &&
+                    p.idcargo == body.idCargo &&
+                    p.idpostulacion != currentEditId // Ignore if it's the current record being edited
+                );
+
+                if (isDuplicate) {
+                    showToast("Error: Esta persona ya tiene una postulación activa para este cargo.", "error");
+                    btn.prop('disabled', false);
+                    return;
+                }
+
                 let res;
                 if (currentEditId) {
                     res = await fetchAPI(`/postulaciones/${currentEditId}`, {
@@ -266,9 +280,20 @@
                 }
 
                 if (res && res.ok) {
+                    const responseData = await res.json(); // Parse response to get ID
+
                     showToast(currentEditId ? "Postulación actualizada" : "Postulación creada exitosamente");
                     $('#newPostModal').modal('hide');
                     loadData();
+
+                    // QUICK ACTION: Redirect to create Revision manually
+                    if (!currentEditId && responseData.id) {
+                        setTimeout(() => {
+                            if (confirm("¿Desea ir al formulario de revisión para completar los detalles ahora?")) {
+                                window.location.href = `revisiones.html?createFor=${responseData.id}`;
+                            }
+                        }, 300);
+                    }
                 } else {
                     showToast("Error al guardar postulación", "error");
                 }

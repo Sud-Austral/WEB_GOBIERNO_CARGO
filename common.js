@@ -31,7 +31,7 @@ const LIBS = [
 const STYLES = `
     body {
         font-family: 'Inter', sans-serif;
-        background-color: #f4f6f9;
+        background-color: #eef2f6;
         font-size: 0.9rem;
     }
     .main-navbar {

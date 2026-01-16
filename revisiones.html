@@ -313,6 +313,16 @@
                 // Add select manually if outside normal flow or needing ID
                 data.idPostulacion = $('#idPostulacion').val();
 
+                // VALIDATION: Unique Revision per Postulation
+                if (!currentEditId) { // Only check on create
+                    const existing = allRevisiones.find(r => r.idpostulacion == data.idPostulacion);
+                    if (existing) {
+                        showToast("Error: Ya existe una revisión para esta postulación.", "error");
+                        btn.prop('disabled', false);
+                        return;
+                    }
+                }
+
                 const url = currentEditId ? `/revisiones/${currentEditId}` : '/revisiones';
                 const method = currentEditId ? 'PUT' : 'POST';
 
@@ -346,6 +356,27 @@
             if (resP) {
                 allPostulaciones = await resP.json();
                 updateModalFilterLists(); // Populate Nivel logic for modal
+
+                // AUTO-OPEN from Postulaciones redirect
+                const urlParams = new URLSearchParams(window.location.search);
+                const createForId = urlParams.get('createFor');
+
+                if (createForId) {
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
+                    openNewRevModal();
+
+                    // Wait for modal and select2
+                    setTimeout(() => {
+                        // Ensure option is available (reset filters if needed)
+                        $('#modalFilterPersona').val('');
+                        $('#cF_Nivel').val('');
+                        filterPostOptions();
+
+                        $('#idPostulacion').val(createForId).trigger('change');
+                    }, 500);
+                }
             }
         }
 

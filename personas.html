@@ -234,10 +234,45 @@
                         <hr class="my-3">
 
                         <div class="col-12">
-                            <label class="form-label fw-bold"><i class="fas fa-file-pdf text-danger me-2"></i>Curriculum
-                                Vitae (PDF) *</label>
                             <input type="file" class="form-control" id="cvFile" name="cvFile" accept=".pdf" required>
                             <div class="form-text">Solo se permiten archivos PDF.</div>
+                        </div>
+
+                        <!-- Postulación Inmediata (Opcional) -->
+                        <div class="col-12 mt-4" id="quickPostulationSection">
+                            <h6 class="text-success border-bottom pb-2"><i class="fas fa-rocket me-2"></i>Postulación
+                                Inmediata (Opcional)</h6>
+                            <div class="alert alert-light border small text-muted mb-2">
+                                <i class="fas fa-info-circle me-1"></i> Filtre y seleccione uno o más cargos para crear
+                                las postulaciones automáticamente.
+                            </div>
+
+                            <!-- Filtros Rápidos -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Filtrar por Nivel</label>
+                                    <select class="form-select form-select-sm" id="quickNivel">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Filtrar por Dependencia</label>
+                                    <select class="form-select form-select-sm" id="quickDepende">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Filtrar por Tipo</label>
+                                    <select class="form-select form-select-sm" id="quickTipo">
+                                        <option value="">Todos</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label class="form-label">Postular a Cargo(s):</label>
+                            <select class="form-select" id="autoPostulaciones" multiple style="width: 100%;">
+                                <!-- Loaded via JS -->
+                            </select>
                         </div>
                     </form>
                 </div>
@@ -391,6 +426,7 @@
             });
 
             loadData();
+            initSelect2();
 
             // New Persona Button hook to reset form state
             $('[data-bs-target="#newPersonaModal"]').on('click', function () {
@@ -434,77 +470,86 @@
                 btn.prop('disabled', true);
                 btn.html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
-                const formData = new FormData(this);
-                const cvFile = document.getElementById('cvFile').files[0];
-                const personData = {};
-                for (let [key, value] of formData.entries()) {
-                    if (key !== 'cvFile') personData[key] = value;
-                }
-
                 try {
-                    // Logic differs for Create vs Update
-                    let personaId;
+                    const url = currentEditId ? `/personas/${currentEditId}` : '/personas';
+                    const method = currentEditId ? 'PUT' : 'POST';
 
-                    if (currentEditId) {
-                        // UPDATE
-                        const res = await fetchAPI(`/personas/${currentEditId}`, {
-                            method: 'PUT',
-                            body: JSON.stringify(personData)
-                        });
+                    // 1. SAVE PERSONA DATA FIRST
+                    const formData = new FormData(this); // Get form data
+                    const payload = Object.fromEntries(formData.entries());
+                    delete payload.cvFile; // Don't send file in JSON
 
-                        if (!res || !res.ok) throw new Error("Error al actualizar persona");
-                        personaId = currentEditId;
-                        showToast("Persona actualizada correctamente");
+                    // Cleanup empty fields
+                    Object.keys(payload).forEach(k => !payload[k] && delete payload[k]);
 
-                    } else {
-                        // CREATE
-                        if (!cvFile) {
-                            showToast("Debe adjuntar un CV en PDF para nuevos registros", "error");
-                            throw new Error("CV requerido");
+                    const res = await fetchAPI(url, {
+                        method: method,
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res && res.ok) {
+                        const responseData = await res.json();
+                        // Get Persona ID (from response on create, or currentEditId on update)
+                        // Backend usually returns {id: X, message: ...} on create
+                        // On update it might just return message. use currentEditId.
+                        const personaId = currentEditId || responseData.id;
+
+                        // 2. UPLOAD FILE IF PRESENT
+                        const cvFile = formData.get('cvFile'); // Get the file object from FormData
+                        if (cvFile && cvFile.size > 0 && personaId) { // Check if file exists and is not empty
+                            const uploadData = new FormData();
+                            uploadData.append('archivo', cvFile);
+                            uploadData.append('tipo_documento', 'CV');
+                            uploadData.append('nombre', 'Curriculum Vitae');
+
+                            // Use correct endpoint
+                            const uploadRes = await fetchAPI(`/personas/${personaId}/documentos`, {
+                                method: 'POST',
+                                body: uploadData
+                            }, true); // isFileUpload=true
+
+                            if (!uploadRes || !uploadRes.ok) {
+                                showToast("Persona guardada pero falló la carga del CV", "warning");
+                            }
                         }
 
-                        const res = await fetchAPI('/personas', {
-                            method: 'POST',
-                            body: JSON.stringify(personData)
-                        });
+                        // 3. AUTO-POSTULATION LOGIC (Only on Create)
+                        const selectedCargos = $('#autoPostulaciones').val();
+                        if (!currentEditId && selectedCargos && selectedCargos.length > 0 && personaId) {
+                            let successCount = 0;
+                            // Create promises for parallel execution to be faster
+                            const promises = selectedCargos.map(cargoId =>
+                                fetchAPI('/postulaciones', {
+                                    method: 'POST',
+                                    body: JSON.stringify({
+                                        idPersona: personaId,
+                                        idCargo: cargoId
+                                    })
+                                }).then(r => r.ok ? 1 : 0).catch(() => 0)
+                            );
 
-                        if (!res || !res.ok) throw new Error("Error al registrar persona");
-                        const result = await res.json();
-                        personaId = result.id;
-                    }
+                            const results = await Promise.all(promises);
+                            successCount = results.reduce((a, b) => a + b, 0);
 
-                    // Handle File Upload if present (optional on edit, required on create)
-                    if (cvFile && personaId) {
-                        const uploadFormData = new FormData();
-                        uploadFormData.append('archivo', cvFile);
-                        uploadFormData.append('tipo_documento', 'CV');
-                        uploadFormData.append('nombre', 'Curriculum Vitae');
-
-                        const token = getToken();
-                        const uploadRes = await fetch(`${API_URL}/personas/${personaId}/documentos`, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${token}` },
-                            body: uploadFormData
-                        });
-
-                        if (uploadRes.ok) {
-                            if (!currentEditId) showToast("CV subido correctamente");
+                            showToast(`Persona creada y postulada a ${successCount} cargos.`);
                         } else {
-                            showToast("Error al subir el archivo CV", "warning");
+                            showToast(currentEditId ? "Registro actualizado" : "Registro creado exitosamente");
                         }
+
+                        $('#newPersonaModal').modal('hide');
+                        loadData();
+                    } else {
+                        throw new Error("Error al guardar datos de la persona");
                     }
-
-                    $('#newPersonaModal').modal('hide');
-                    loadData();
-
                 } catch (error) {
                     console.error(error);
-                    if (error.message !== "CV requerido") showToast(error.message || "Error", "error");
+                    showToast(error.message || "Error al procesar solicitud", "error");
                 } finally {
                     btn.prop('disabled', false);
                     btn.html(currentEditId ? 'Actualizar' : 'Guardar Registro');
                 }
             });
+
 
             // Close viewer on click outside
             document.getElementById('pdfViewerModal').addEventListener('click', function (e) {
@@ -512,12 +557,98 @@
             });
         }
 
+        let cachedCargos = [];
+
         async function loadData() {
             const res = await fetchAPI('/personas');
             if (res) {
                 const data = await res.json();
                 table.clear().rows.add(data).draw();
             }
+
+            // Load Cargos for Auto-Postulation
+            const resC = await fetchAPI('/cargos');
+            if (resC) {
+                cachedCargos = await resC.json();
+                populateQuickFilters();
+                filterAutoPostulaciones(); // Initial fill
+            }
+        }
+
+        function populateQuickFilters() {
+            // Extract unique values
+            const niveles = [...new Set(cachedCargos.map(c => c.nivel).filter(Boolean))].sort();
+            const dependes = [...new Set(cachedCargos.map(c => c.dependede || c.dependeDe).filter(Boolean))].sort();
+            const tipos = [...new Set(cachedCargos.map(c => c.tipo).filter(Boolean))].sort();
+
+            fillSelect('#quickNivel', niveles);
+            fillSelect('#quickDepende', dependes);
+            fillSelect('#quickTipo', tipos);
+        }
+
+        function fillSelect(id, values) {
+            const el = $(id);
+            el.empty().append('<option value="">Todos</option>');
+            values.forEach(v => el.append(new Option(v, v)));
+        }
+
+        function filterAutoPostulaciones() {
+            const fNivel = $('#quickNivel').val();
+            const fDepende = $('#quickDepende').val();
+            const fTipo = $('#quickTipo').val();
+
+            const sel = $('#autoPostulaciones');
+            // 1. Capture current selection (IDs)
+            const currentVal = sel.val() || [];
+            const currentValSet = new Set(currentVal.map(String)); // Convert to string for consistent comparison
+
+            const filteredAndSelected = cachedCargos.filter(c => {
+                const dep = c.dependede || c.dependeDe;
+                const matches = (!fNivel || c.nivel == fNivel) &&
+                    (!fDepende || dep == fDepende) &&
+                    (!fTipo || c.tipo == fTipo);
+
+                // CRITICAL: Keep item if it matches filter OR if it is already selected
+                return matches || currentValSet.has(String(c.idcargo));
+            });
+
+            sel.empty();
+            filteredAndSelected.forEach(c => {
+                sel.append(new Option(`${c.detalle} (${c.nivel})`, c.idcargo));
+            });
+
+            // 2. Restore selection (now the options exist, so this will work)
+            sel.val(currentVal).trigger('change');
+        }
+
+        function initSelect2() {
+            // Init Multi-select for cargos inside modal
+            $('#autoPostulaciones').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#newPersonaModal .modal-body'), // Fix positioning
+                placeholder: "Seleccione cargos...",
+                width: '100%',
+                closeOnSelect: false
+            });
+
+            // Filter Listeners
+            $('#quickNivel, #quickDepende, #quickTipo').on('change', filterAutoPostulaciones);
+        }
+
+        function openNewPersonaModal() {
+            currentEditId = null;
+            $('#personaForm')[0].reset();
+            $('#personaForm').removeClass('was-validated');
+            $('#rutInput').removeClass('is-invalid');
+            $('#rutInput').prop('readonly', false);
+
+            // Reset Auto-Postulation
+            $('#autoPostulaciones').val(null).trigger('change');
+            $('#quickPostulationSection').show(); // Show on create
+
+            // Reset File info logic if needed (clear custom text)
+            // ...
+            $('#newPersonaModal').modal('show');
         }
 
         function openNewPersonaModal() {
