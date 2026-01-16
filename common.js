@@ -109,38 +109,26 @@ const STYLES = `
         border-bottom: 1px solid #dee2e6;
     }
     .pdf-viewer-header h5 {
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    .btn-close-viewer {
-        background: #dc3545;
-        color: white;
-        border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-    .btn-close-viewer:hover {
-        background: #bb2d3b;
+        border-bottom: 1px solid #cbd5e1;
     }
     .pdf-viewer-body {
         flex: 1;
+        width: 100%;
+        height: 100%;
         position: relative;
-        background: #525252;
     }
-    .pdf-viewer-body iframe {
+    .pdf-viewer-iframe {
         width: 100%;
         height: 100%;
         border: none;
     }
-    #viewerLoading {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
+    .pdf-viewer-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #334155;
     }
-
 `;
 
 // --- Loader ---
@@ -218,29 +206,41 @@ function renderLayout(activePage) {
     // Navbar HTML
     const user = getCurrentUser();
     const navHTML = `
-    <nav class="navbar navbar-expand-lg main-navbar sticky-top">
-        <div class="container-fluid px-5">
-            <a class="navbar-brand" href="dashboard.html"><i class="fas fa-users-cog me-2"></i>Gestión Candidatos</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+    <nav class="navbar navbar-expand-lg main-navbar sticky-top mb-4">
+        <div class="container-xl">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.html">
+                <i class="fas fa-layer-group"></i> 
+                <span>GestiónCandidatos</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link ${activePage === 'personas' ? 'active' : ''}" href="personas.html">Personas</a></li>
-                    <li class="nav-item"><a class="nav-link ${activePage === 'cargos' ? 'active' : ''}" href="cargos.html">Cargos</a></li>
-                    <li class="nav-item"><a class="nav-link ${activePage === 'postulaciones' ? 'active' : ''}" href="postulaciones.html">Postulaciones</a></li>
-                    <li class="nav-item"><a class="nav-link ${activePage === 'revisiones' ? 'active' : ''}" href="revisiones.html">Revisiones</a></li>
-                    <li class="nav-item"><a class="nav-link ${activePage === 'seleccion' ? 'active' : ''}" href="seleccion.html">Selección</a></li>
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+                    <li class="nav-item"><a class="nav-link ${activePage === 'dashboard' ? 'active' : ''}" href="dashboard.html"><i class="fas fa-home me-1 opacity-75"></i> Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'personas' ? 'active' : ''}" href="personas.html"><i class="fas fa-user-friends me-1 opacity-75"></i> Personas</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'cargos' ? 'active' : ''}" href="cargos.html"><i class="fas fa-briefcase me-1 opacity-75"></i> Cargos</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'postulaciones' ? 'active' : ''}" href="postulaciones.html"><i class="fas fa-file-alt me-1 opacity-75"></i> Postulaciones</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'revisiones' ? 'active' : ''}" href="revisiones.html"><i class="fas fa-tasks me-1 opacity-75"></i> Revisiones</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'seleccion' ? 'active' : ''}" href="seleccion.html"><i class="fas fa-check-circle me-1 opacity-75"></i> Selección</a></li>
+                    <li class="nav-item border-start ps-2 ms-2 d-none d-lg-block"></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'resultados' ? 'active' : ''} text-success fw-bold" href="resultados.html"><i class="fas fa-chart-pie me-1"></i> Resultados</a></li>
                 </ul>
-                <div class="d-flex align-items-center">
-                    <span class="me-3 text-muted"><i class="fas fa-user-circle me-1"></i> ${user ? user.nombre : 'Usuario'}</span>
-                    <button class="btn btn-outline-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex flex-column text-end d-none d-lg-block line-height-sm">
+                        <span class="fw-bold text-dark small">${user ? user.nombre : 'Usuario'}</span>
+                        <span class="text-xs text-muted" style="font-size: 0.75rem;">Administrador</span>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-circle shadow-sm" type="button" onclick="logout()" title="Cerrar Sesión">
+                            <i class="fas fa-sign-out-alt text-danger"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
-    <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;"></div>
     `;
 
     // Prepend Navbar
@@ -257,6 +257,11 @@ async function fetchAPI(endpoint, options = {}) {
         ...options,
         headers: { ...headers, ...options.headers }
     };
+
+    // If sending FormData, delete Content-Type header so browser sets it with boundary
+    if (options.body instanceof FormData) {
+        delete config.headers['Content-Type'];
+    }
 
     try {
         const res = await fetch(`${API_URL}${endpoint}`, config);

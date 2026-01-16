@@ -470,6 +470,19 @@
                 btn.prop('disabled', true);
                 btn.html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
+                // Validate Unique RUT
+                const rutVal = rutInput.value.trim().toUpperCase();
+                const existingPerson = table.rows().data().toArray().find(p => p.rut.trim().toUpperCase() === rutVal);
+
+                if (existingPerson && (!currentEditId || existingPerson.idpersona != currentEditId)) {
+                    rutInput.classList.add('is-invalid');
+                    document.getElementById('rutError').textContent = 'Este RUT ya está registrado en el sistema';
+                    showToast("El RUT ingresado ya existe", "error");
+                    btn.prop('disabled', false);
+                    btn.html(currentEditId ? 'Actualizar' : 'Guardar Registro');
+                    return;
+                }
+
                 try {
                     const url = currentEditId ? `/personas/${currentEditId}` : '/personas';
                     const method = currentEditId ? 'PUT' : 'POST';
