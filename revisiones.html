@@ -16,9 +16,58 @@
                 <p class="text-muted">Evaluación detallada de postulaciones.</p>
             </div>
             <div class="col-auto">
-                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#newRevModal">
+                <button class="btn btn-danger" onclick="openNewRevModal()">
                     <i class="fas fa-plus me-1"></i> Nueva Revisión
                 </button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card shadow-sm mb-4 bg-light border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small">Buscar Texto</label>
+                        <input type="text" id="filterSearch" class="form-control" placeholder="Nombre, cargo...">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Nivel</label>
+                        <select id="filterNivel" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Depende De</label>
+                        <select id="filterDepende" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Tipo Cargo</label>
+                        <select id="filterTipo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Estado</label>
+                        <select id="filterEstado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Revisión CV">Revisión CV</option>
+                            <option value="Preseleccionado">Preseleccionado</option>
+                            <option value="Seleccionado">Seleccionado</option>
+                            <option value="Finalizado">Finalizado</option>
+                            <option value="Rechazado">Rechazado</option>
+                            <option value="Cargo No Disponible">Cargo No Disponible</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -44,25 +93,25 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
+    <!-- Modal Create/Edit -->
     <div class="modal fade" id="newRevModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Nueva Revisión</h5>
+                    <h5 class="modal-title fw-bold" id="newRevModalLabel">Nueva Revisión</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="revForm">
 
-                        <!-- Filters Section -->
-                        <div class="card bg-light border-0 mb-3">
+                        <!-- Filters Section (For Selection) -->
+                        <div class="card bg-light border-0 mb-3" id="filterSection">
                             <div class="card-body">
                                 <h6 class="card-title fw-bold mb-3">Buscar Postulación</h6>
                                 <div class="row g-3">
                                     <div class="col-12">
                                         <label class="form-label small">Filtrar por Candidato</label>
-                                        <input type="text" id="filterPersona" class="form-control"
+                                        <input type="text" id="modalFilterPersona" class="form-control"
                                             placeholder="Escriba nombre o RUT...">
                                     </div>
                                     <div class="col-md-4">
@@ -150,7 +199,29 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" form="revForm" class="btn btn-danger">Guardar Revisión</button>
+                    <button type="submit" form="revForm" class="btn btn-danger" id="btnSaveRev">Guardar
+                        Revisión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal View -->
+    <div class="modal fade" id="viewRevModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Detalles de la Revisión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3" id="viewRevContent">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditFromView">Editar</button>
                 </div>
             </div>
         </div>
@@ -163,10 +234,33 @@
 
         let table;
         let allPostulaciones = [];
+        let allRevisiones = [];
+        let currentEditId = null;
 
         function initApp() {
             if (!isAuthenticated()) { window.location.href = "index.html"; return; }
             renderLayout('revisiones');
+
+            // --- MAIN TABLE FILTERS ---
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex, rowData) {
+                    if (settings.nTable.id !== 'revTable') return true;
+
+                    const fNivel = $('#filterNivel').val();
+                    const fDepende = $('#filterDepende').val();
+                    const fTipo = $('#filterTipo').val();
+                    const fEstado = $('#filterEstado').val();
+
+                    if (!fNivel && !fDepende && !fTipo && !fEstado) return true;
+
+                    if (fNivel && rowData.cargo_nivel !== fNivel) return false;
+                    if (fDepende && rowData.cargo_depende !== fDepende) return false;
+                    if (fTipo && rowData.cargo_tipo !== fTipo) return false;
+                    if (fEstado && rowData.estado !== fEstado) return false;
+
+                    return true;
+                }
+            );
 
             // Init DataTables
             table = $('#revTable').DataTable({
@@ -179,7 +273,15 @@
                     { data: "estado", render: (d) => `<span class="badge ${getStatusBadge(d)}">${d}</span>` },
                     { data: "prioridad" },
                     { data: "fecharevision", render: (d) => new Date(d).toLocaleDateString() },
-                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deleteRev(${d.idrevision})"><i class="fas fa-trash"></i></button>` }
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (d) => `
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewRev(${d.idrevision})" title="Ver"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editRev(${d.idrevision})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteRev(${d.idrevision})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        `
+                    }
                 ]
             });
 
@@ -191,7 +293,7 @@
             });
 
             loadData();
-            initFilters();
+            initEventListeners();
 
             $('#revForm').on('submit', async function (e) {
                 e.preventDefault();
@@ -203,16 +305,17 @@
                 // Add select manually if outside normal flow or needing ID
                 data.idPostulacion = $('#idPostulacion').val();
 
-                const res = await fetchAPI('/revisiones', {
-                    method: 'POST',
+                const url = currentEditId ? `/revisiones/${currentEditId}` : '/revisiones';
+                const method = currentEditId ? 'PUT' : 'POST';
+
+                const res = await fetchAPI(url, {
+                    method: method,
                     body: JSON.stringify(data)
                 });
 
                 if (res && res.ok) {
-                    showToast("Revisión creada");
+                    showToast(currentEditId ? "Revisión actualizada" : "Revisión creada");
                     $('#newRevModal').modal('hide');
-                    this.reset();
-                    $('#idPostulacion').val(null).trigger('change');
                     loadData();
                 } else {
                     showToast("Error al guardar", "error");
@@ -225,57 +328,152 @@
             // Load Revisions
             const res = await fetchAPI('/revisiones');
             if (res) {
-                const data = await res.json();
-                table.clear().rows.add(data).draw();
+                allRevisiones = await res.json();
+                table.clear().rows.add(allRevisiones).draw();
+                populateMainFilters(allRevisiones);
             }
 
             // Load Postulaciones for options
             const resP = await fetchAPI('/postulaciones');
             if (resP) {
                 allPostulaciones = await resP.json();
-                updateFilterLists(); // Populate Nivel logic
-                filterPostOptions(); // Initial list
+                updateModalFilterLists(); // Populate Nivel logic for modal
             }
         }
 
-        // --- Filter Logic ---
-        function initFilters() {
-            $('#filterPersona').on('keyup', filterPostOptions);
+        function initEventListeners() {
+            // Main Filters - Bidirectional Cascading
+            $('#filterNivel').on('change', function () {
+                updateAllFilters('nivel');
+                table.draw();
+            });
+            $('#filterDepende').on('change', function () {
+                updateAllFilters('depende');
+                table.draw();
+            });
+            $('#filterTipo').on('change', function () {
+                updateAllFilters('tipo');
+                table.draw();
+            });
+            $('#filterEstado').on('change', function () {
+                table.draw();
+            });
+            $('#filterSearch').on('keyup', function () {
+                table.search(this.value).draw();
+            });
+
+            // Modal Filters - Multidirectional
+            $('#modalFilterPersona').on('keyup', filterPostOptions);
             $('#cF_Nivel, #cF_Depende, #cF_Tipo').on('change', function () {
-                if (this.id === 'cF_Nivel') updateCascade('nivel');
-                if (this.id === 'cF_Depende') updateCascade('depende');
+                if (this.id === 'cF_Nivel') updateModalFilters('nivel');
+                else if (this.id === 'cF_Depende') updateModalFilters('depende');
+                else updateModalFilters('tipo');
                 filterPostOptions();
             });
         }
 
-        function updateFilterLists() {
-            // Populate Nivel
+        // --- MAIN FILTER POPULATION ---
+        function populateMainFilters(data) {
+            const niveles = [...new Set(data.map(d => d.cargo_nivel).filter(Boolean))].sort();
+            fillSelect('#filterNivel', niveles);
+            updateAllFilters('init');
+        }
+
+        function updateAllFilters(changedFilter) {
+            const nivel = $('#filterNivel').val();
+            const depende = $('#filterDepende').val();
+            const tipo = $('#filterTipo').val();
+
+            // Filter data based on current selections
+            let filtered = allRevisiones;
+            if (nivel) filtered = filtered.filter(d => d.cargo_nivel == nivel);
+            if (depende) filtered = filtered.filter(d => d.cargo_depende == depende);
+            if (tipo) filtered = filtered.filter(d => d.cargo_tipo == tipo);
+
+            // Update all dropdowns except the one that changed
+            if (changedFilter !== 'nivel') {
+                const niveles = [...new Set(filtered.map(d => d.cargo_nivel).filter(Boolean))].sort();
+                fillSelect('#filterNivel', niveles, nivel);
+            }
+
+            if (changedFilter !== 'depende') {
+                const dependes = [...new Set(filtered.map(d => d.cargo_depende).filter(Boolean))].sort();
+                fillSelect('#filterDepende', dependes, depende);
+            }
+
+            if (changedFilter !== 'tipo') {
+                const tipos = [...new Set(filtered.map(d => d.cargo_tipo).filter(Boolean))].sort();
+                fillSelect('#filterTipo', tipos, tipo);
+            }
+        }
+
+        function fillSelect(selector, values, currentSelection) {
+            const el = $(selector);
+            const current = currentSelection !== undefined ? currentSelection : el.val();
+            if (selector !== '#filterEstado') {
+                el.empty().append('<option value="">Todos</option>');
+                values.forEach(v => el.append(new Option(v, v)));
+            }
+            if (current && values.includes(current)) el.val(current);
+            else if (current && selector !== '#filterEstado') el.val('');
+        }
+
+        function clearFilters() {
+            $('#filterSearch').val('');
+            $('#filterEstado').val('');
+            $('#filterNivel').val('').trigger('change');
+            // Don't manually reset depende/tipo - let cascade handle it
+            table.search('').draw();
+        }
+
+        // --- MODAL LOGIC & POSTULATION FILTERING ---
+
+        function updateModalFilterLists() {
+            // Populate Nivel inside Modal
             const niveles = [...new Set(allPostulaciones.map(p => p.cargo_nivel).filter(Boolean))].sort();
             populateSelect('#cF_Nivel', niveles);
+            updateModalFilters('init');
         }
 
-        function updateCascade(changed) {
+        function updateModalFilters(changedFilter) {
             const nivel = $('#cF_Nivel').val();
+            const depende = $('#cF_Depende').val();
+            const tipo = $('#cF_Tipo').val();
 
-            if (changed === 'nivel') {
-                // Update Depende based on Nivel
-                let valid = allPostulaciones;
-                if (nivel) valid = valid.filter(p => p.cargo_nivel == nivel);
-                const dependes = [...new Set(valid.map(p => p.cargo_depende).filter(Boolean))].sort();
-                populateSelect('#cF_Depende', dependes);
-                $('#cF_Depende').val('').trigger('change'); // Reset lower
+            // Filter postulaciones based on current selections
+            let filtered = allPostulaciones;
+            if (nivel) filtered = filtered.filter(p => p.cargo_nivel == nivel);
+            if (depende) filtered = filtered.filter(p => p.cargo_depende == depende);
+            if (tipo) filtered = filtered.filter(p => p.cargo_tipo == tipo);
+
+            // Update all dropdowns except the one that changed
+            if (changedFilter !== 'nivel') {
+                const niveles = [...new Set(filtered.map(p => p.cargo_nivel).filter(Boolean))].sort();
+                populateSelect('#cF_Nivel', niveles, nivel);
             }
-            // Similar for Tipo if needed, but simplistic approach is fine for now
+
+            if (changedFilter !== 'depende') {
+                const dependes = [...new Set(filtered.map(p => p.cargo_depende).filter(Boolean))].sort();
+                populateSelect('#cF_Depende', dependes, depende);
+            }
+
+            if (changedFilter !== 'tipo') {
+                const tipos = [...new Set(filtered.map(p => p.cargo_tipo).filter(Boolean))].sort();
+                populateSelect('#cF_Tipo', tipos, tipo);
+            }
         }
 
-        function populateSelect(selector, values) {
+        function populateSelect(selector, values, currentSelection) {
             const el = $(selector);
+            const current = currentSelection !== undefined ? currentSelection : el.val();
             el.html('<option value="">Todos</option>');
             values.forEach(v => el.append(new Option(v, v)));
+            if (current && values.includes(current)) el.val(current);
+            else if (current) el.val('');
         }
 
         function filterPostOptions() {
-            const term = $('#filterPersona').val().toLowerCase();
+            const term = $('#modalFilterPersona').val().toLowerCase();
             const nivel = $('#cF_Nivel').val();
             const depende = $('#cF_Depende').val();
             const tipo = $('#cF_Tipo').val();
@@ -308,11 +506,121 @@
         function getStatusBadge(status) {
             switch (status) {
                 case 'Pendiente': return 'bg-warning text-dark';
-                case 'En Proceso': return 'bg-info text-dark';
-                case 'Finalizado': return 'bg-success';
+                case 'Revisión CV': return 'bg-info text-dark';
+                case 'Preseleccionado': return 'bg-primary';
+                case 'Seleccionado': return 'bg-success';
+                case 'Finalizado': return 'bg-dark';
                 case 'Rechazado': return 'bg-danger';
                 default: return 'bg-secondary';
             }
+        }
+
+        function openNewRevModal() {
+            currentEditId = null;
+            $('#revForm')[0].reset();
+            $('#newRevModalLabel').text("Nueva Revisión");
+            $('#btnSaveRev').text("Guardar Revisión");
+            $('#filterSection').show(); // Show filters for new
+
+            // Reset filters and selection
+            $('#modalFilterPersona').val('');
+            $('#cF_Nivel').val('');
+            $('#cF_Depende').val('');
+            $('#cF_Tipo').val('');
+            filterPostOptions();
+            $('#idPostulacion').val(null).trigger('change');
+            $('#idPostulacion').prop('disabled', false);
+
+            $('#newRevModal').modal('show');
+        }
+
+        function viewRev(id) {
+            const rev = table.rows().data().toArray().find(r => r.idrevision == id);
+            if (!rev) return;
+
+            // Build HTML for #viewRevContent
+            const html = `
+                <div class="col-md-6">
+                    <label class="fw-bold small text-muted">Candidato</label>
+                    <p class="mb-1">${rev.nombres} ${rev.apellidopaterno || ''}</p>
+                    <p class="text-muted small">${rev.rut || ''}</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold small text-muted">Fecha Revisión</label>
+                    <p>${new Date(rev.fecharevision).toLocaleString()}</p>
+                </div>
+                <div class="col-12">
+                     <label class="fw-bold small text-muted">Cargo</label>
+                     <p>${rev.cargo_tipo || ''} - ${rev.cargo_detalle || ''} (${rev.cargo_nivel || ''})</p>
+                </div>
+                <div class="col-md-4">
+                     <label class="fw-bold small text-muted">Tipo Candidatura</label>
+                     <p>${rev.tipo_candidatura || '-'}</p>
+                </div>
+                <div class="col-md-4">
+                     <label class="fw-bold small text-muted">Prioridad</label>
+                     <p>${rev.prioridad || '-'}</p>
+                </div>
+                <div class="col-md-4">
+                     <label class="fw-bold small text-muted">Estado</label>
+                     <p><span class="badge ${getStatusBadge(rev.estado)}">${rev.estado}</span></p>
+                </div>
+                <div class="col-md-6">
+                     <label class="fw-bold small text-muted">Fit Político</label>
+                     <p>${rev.fit_politico || '-'}</p>
+                </div>
+                <div class="col-12">
+                    <label class="fw-bold small text-muted">Comentarios</label>
+                    <div class="p-2 bg-light rounded">${rev.comentarios || 'Sin comentarios'}</div>
+                </div>
+                 <div class="col-12" ${rev.analisis_cv_ia ? '' : 'style="display:none"'}>
+                    <label class="fw-bold small text-muted">Análisis IA</label>
+                    <div class="p-2 bg-light rounded small text-muted" style="max-height: 200px; overflow-y: auto;">
+                        ${rev.analisis_cv_ia || ''}
+                    </div>
+                </div>
+            `;
+            $('#viewRevContent').html(html);
+            $('#btnEditFromView').attr('onclick', `$('#viewRevModal').modal('hide'); editRev(${id});`);
+            $('#viewRevModal').modal('show');
+        }
+
+        function editRev(id) {
+            const rev = table.rows().data().toArray().find(r => r.idrevision == id);
+            if (!rev) return;
+
+            currentEditId = id;
+
+            // Reset form
+            $('#revForm')[0].reset();
+            $('#newRevModalLabel').text("Editar Revisión");
+            $('#btnSaveRev').text("Actualizar");
+            $('#filterSection').hide();
+
+            // Pre-fill fields
+            $('[name="tipoCandidatura"]').val(rev.tipo_candidatura || rev.tipoCandidatura);
+            $('[name="prioridad"]').val(rev.prioridad);
+            $('[name="estado"]').val(rev.estado);
+            $('[name="fitPolitico"]').val(rev.fit_politico || rev.fitPolitico);
+            $('[name="comentarios"]').val(rev.comentarios);
+            $('[name="analisisCvIa"]').val(rev.analisis_cv_ia || rev.analisisCvIa);
+
+            // Set Postulacion
+            const pid = rev.idpostulacion || rev.idPostulacion;
+            if (pid) {
+                if ($('#idPostulacion option[value="' + pid + '"]').length === 0) {
+                    $('#modalFilterPersona').val('');
+                    $('#cF_Nivel').val('');
+                    $('#cF_Depende').val('');
+                    $('#cF_Tipo').val('');
+                    filterPostOptions();
+                }
+
+                $('#idPostulacion').val(pid).trigger('change');
+                $('#idPostulacion').prop('disabled', true);
+            }
+
+            $('#newRevModal').modal('show');
         }
 
         async function deleteRev(id) {

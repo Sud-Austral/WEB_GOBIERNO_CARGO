@@ -5,11 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Postulaciones - Gestión Candidatos</title>
-    <!-- common.js loads CSS libs -->
 </head>
 
 <body>
-    <!-- Nav injected by common.js -->
 
     <div class="container my-5">
         <div class="row mb-4 align-items-center">
@@ -18,9 +16,45 @@
                 <p class="text-muted">Administre las postulaciones de candidatos a cargos.</p>
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newPostModal">
+                <button class="btn btn-primary" onclick="openNewPostModal()">
                     <i class="fas fa-plus me-1"></i> Nueva Postulación
                 </button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card shadow-sm mb-4 bg-light border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small">Buscar Texto</label>
+                        <input type="text" id="filterSearch" class="form-control" placeholder="Nombre, cargo...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Nivel</label>
+                        <select id="filterNivel" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Depende De (Jefatura/Área)</label>
+                        <select id="filterDepende" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Tipo de Cargo</label>
+                        <select id="filterTipo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -32,7 +66,7 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Candidato</th>
-                                <th>Cargo (Tipo - Detalle - Nivel)</th>
+                                <th>Cargo</th>
                                 <th>Fecha</th>
                                 <th>Acciones</th>
                             </tr>
@@ -44,7 +78,7 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
+    <!-- Modal Create/Edit -->
     <div class="modal fade" id="newPostModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -61,7 +95,7 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-3" id="cargoFiltersSection">
                             <label class="form-label fw-bold">2. Filtrar Cargo</label>
                             <div class="card bg-light border-0">
                                 <div class="card-body">
@@ -105,20 +139,57 @@
         </div>
     </div>
 
+    <!-- Modal View Details -->
+    <div class="modal fade" id="viewPostModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Detalle de Postulación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="viewPostContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditFromView">Editar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="common.js"></script>
     <script>
-        // Wait for libs loaded event from common.js
         document.addEventListener('libsLoaded', initApp);
-
-        // Fallback in case they are cached/fast
         if (window.jQuery) initApp();
 
         let allCargos = [];
+        let allPostulacionesData = [];
         let dataTable;
+        let currentEditId = null;
 
         function initApp() {
             if (!isAuthenticated()) { window.location.href = "index.html"; return; }
             renderLayout('postulaciones');
+
+            // Setup Custom Filtering for DataTables
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex, rowData) {
+                    if (settings.nTable.id !== 'postTable') return true;
+
+                    const fNivel = $('#filterNivel').val();
+                    const fDepende = $('#filterDepende').val();
+                    const fTipo = $('#filterTipo').val();
+
+                    if (!fNivel && !fDepende && !fTipo) return true;
+
+                    if (fNivel && rowData.cargo_nivel !== fNivel) return false;
+                    if (fDepende && rowData.cargo_depende !== fDepende) return false;
+                    if (fTipo && rowData.cargo_tipo !== fTipo) return false;
+
+                    return true;
+                }
+            );
 
             // Init DataTables
             dataTable = $('#postTable').DataTable({
@@ -127,10 +198,43 @@
                 columns: [
                     { data: "idpostulacion", width: "5%" },
                     { data: null, render: (d) => `<div class="fw-bold">${d.nombres} ${d.apellidopaterno}</div><div class="small text-muted">${d.rut || ''}</div>` },
-                    { data: null, render: (d) => `${d.cargo_tipo || '-'} <i class="fas fa-chevron-right text-muted mx-1" style="font-size:0.7em"></i> ${d.cargo_detalle || '-'} <span class="badge bg-secondary ms-2">${d.cargo_nivel || ''}</span>` },
+                    {
+                        data: null,
+                        render: (d) => {
+                            let html = `<div class="fw-bold">${d.cargo_detalle || 'Cargo desconocido'}</div>`;
+                            html += `<div class="small text-muted">${d.cargo_tipo || ''}</div>`;
+                            if (d.cargo_nivel) html += `<span class="badge bg-secondary">${d.cargo_nivel}</span>`;
+                            return html;
+                        }
+                    },
                     { data: "fechapostulacion", render: (d) => new Date(d).toLocaleDateString() },
-                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deletePost(${d.idpostulacion})"><i class="fas fa-trash"></i></button>` }
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (d) => `
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewPost(${d.idpostulacion})" title="Ver"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editPost(${d.idpostulacion})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePost(${d.idpostulacion})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        `
+                    }
                 ]
+            });
+
+            // Filtering Event Listeners - Bidirectional Cascading
+            $('#filterNivel').on('change', function () {
+                updateAllFilters('nivel');
+                dataTable.draw();
+            });
+            $('#filterDepende').on('change', function () {
+                updateAllFilters('depende');
+                dataTable.draw();
+            });
+            $('#filterTipo').on('change', function () {
+                updateAllFilters('tipo');
+                dataTable.draw();
+            });
+            $('#filterSearch').on('keyup', function () {
+                dataTable.search(this.value).draw();
             });
 
             loadData();
@@ -147,20 +251,25 @@
                     idCargo: $('#idCargo').val()
                 };
 
-                const res = await fetchAPI('/postulaciones', {
-                    method: 'POST',
-                    body: JSON.stringify(body)
-                });
+                let res;
+                if (currentEditId) {
+                    res = await fetchAPI(`/postulaciones/${currentEditId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(body)
+                    });
+                } else {
+                    res = await fetchAPI('/postulaciones', {
+                        method: 'POST',
+                        body: JSON.stringify(body)
+                    });
+                }
 
                 if (res && res.ok) {
-                    showToast("Postulación creada exitosamente");
+                    showToast(currentEditId ? "Postulación actualizada" : "Postulación creada exitosamente");
                     $('#newPostModal').modal('hide');
                     loadData();
-                    // Reset form
-                    $('#idPersona').val(null).trigger('change');
-                    $('#idCargo').empty().trigger('change');
                 } else {
-                    showToast("Error al crear postulación", "error");
+                    showToast("Error al guardar postulación", "error");
                 }
                 btn.prop('disabled', false);
             });
@@ -171,14 +280,16 @@
             const res = await fetchAPI('/postulaciones');
             if (res) {
                 const data = await res.json();
+                allPostulacionesData = data;
                 dataTable.clear().rows.add(data).draw();
+                populateMainFilters(data);
             }
 
-            // Load Cargos for memory (filtering)
+            // Load Cargos for memory (form filtering)
             const resC = await fetchAPI('/cargos');
             if (resC) {
                 allCargos = await resC.json();
-                updateFilterOptions(); // Populate filter dropdowns
+                updateFormFilterOptions(); // Populate form filter dropdowns
             }
 
             // Load Personas for Select2
@@ -189,17 +300,155 @@
                     id: p.idpersona,
                     text: `${p.rut} - ${p.nombres} ${p.apellidopaterno || ''}`
                 }));
-                $('.select2-persona').select2({
+                const sel = $('.select2-persona');
+                sel.empty(); // Clear old options to avoid duplicates on reload
+                sel.append('<option value="">Buscar persona...</option>');
+                sel.select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#newPostModal'),
                     data: mapped,
-                    placeholder: "Buscar por nombre o RUT..."
+                    placeholder: "Buscar por nombre o RUT...",
+                    allowClear: true
                 });
             }
         }
 
+        function populateMainFilters(data) {
+            const niveles = [...new Set(data.map(d => d.cargo_nivel).filter(Boolean))].sort();
+            fillSelect('#filterNivel', niveles);
+            updateAllFilters('init');
+        }
+
+        function updateAllFilters(changedFilter) {
+            const nivel = $('#filterNivel').val();
+            const depende = $('#filterDepende').val();
+            const tipo = $('#filterTipo').val();
+
+            // Filter data based on current selections
+            let filtered = allPostulacionesData;
+            if (nivel) filtered = filtered.filter(d => d.cargo_nivel == nivel);
+            if (depende) filtered = filtered.filter(d => d.cargo_depende == depende);
+            if (tipo) filtered = filtered.filter(d => d.cargo_tipo == tipo);
+
+            // Update all dropdowns except the one that changed
+            if (changedFilter !== 'nivel') {
+                const niveles = [...new Set(filtered.map(d => d.cargo_nivel).filter(Boolean))].sort();
+                fillSelect('#filterNivel', niveles, nivel);
+            }
+
+            if (changedFilter !== 'depende') {
+                const dependes = [...new Set(filtered.map(d => d.cargo_depende).filter(Boolean))].sort();
+                fillSelect('#filterDepende', dependes, depende);
+            }
+
+            if (changedFilter !== 'tipo') {
+                const tipos = [...new Set(filtered.map(d => d.cargo_tipo).filter(Boolean))].sort();
+                fillSelect('#filterTipo', tipos, tipo);
+            }
+        }
+
+        function fillSelect(selector, values, currentSelection) {
+            const el = $(selector);
+            const current = currentSelection !== undefined ? currentSelection : el.val();
+            el.empty().append('<option value="">Todos</option>');
+            values.forEach(v => {
+                el.append(new Option(v, v));
+            });
+            if (current && values.includes(current)) el.val(current);
+            else if (current) el.val('');
+        }
+
+        function clearFilters() {
+            $('#filterSearch').val('');
+            $('#filterNivel').val('').trigger('change');
+            // Don't manually reset depende/tipo - let cascade handle it
+            dataTable.search('').draw();
+        }
+
+        // -----------------------
+        // Form Logic
+        // -----------------------
+
+        function openNewPostModal() {
+            currentEditId = null;
+            $('#postForm')[0].reset();
+            $('#idPersona').val(null).trigger('change');
+            $('#idCargo').val(null).trigger('change');
+            // Reset form filters
+            updateFormFilterOptions();
+
+            $('#newPostModal .modal-title').text("Nueva Postulación");
+            $('#newPostModal button[type="submit"]').text("Guardar Postulación");
+            $('#newPostModal').modal('show');
+        }
+
+        function editPost(id) {
+            const row = dataTable.rows().data().toArray().find(r => r.idpostulacion == id);
+            if (!row) return;
+
+            currentEditId = id;
+
+            // Set Persona
+            $('#idPersona').val(row.idpersona).trigger('change');
+
+            // Find Cargo for pre-filling filters
+            const cargo = allCargos.find(c => c.idcargo == row.idcargo);
+            if (cargo) {
+                // Set filters to match this cargo
+                $('#cF_Nivel').val(cargo.nivel).trigger('change');
+                setTimeout(() => {
+                    $('#cF_Depende').val(cargo.dependede).trigger('change');
+                    setTimeout(() => {
+                        $('#cF_Type').val(cargo.tipo).trigger('change');
+                        $('#cF_Nivel').val('').trigger('change');
+                        $('#cF_Depende').val('').trigger('change');
+                        $('#cF_Tipo').val('').trigger('change');
+
+                        // Wait for options to rebuild
+                        updateCargoSelect();
+                        $('#idCargo').val(row.idcargo).trigger('change');
+                    }, 50);
+                }, 50);
+            }
+
+            $('#newPostModal .modal-title').text("Editar Postulación");
+            $('#newPostModal button[type="submit"]').text("Actualizar");
+            $('#newPostModal').modal('show');
+        }
+
+        function viewPost(id) {
+            const d = dataTable.rows().data().toArray().find(r => r.idpostulacion == id);
+            if (!d) return;
+
+            const html = `
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">ID Postulación</label>
+                    <div>${d.idpostulacion}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Candidato</label>
+                    <div>${d.nombres} ${d.apellidopaterno}</div>
+                    <div class="small">${d.rut}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Cargo</label>
+                    <div>${d.cargo_detalle || '-'}</div>
+                    <div class="small">Tipo: ${d.cargo_tipo || '-'} | Nivel: ${d.cargo_nivel || '-'}</div>
+                    <div class="small">Depende de: ${d.cargo_depende || '-'}</div>
+                </div>
+                <div class="mb-3">
+                    <label class="small text-muted fw-bold">Fecha Postulación</label>
+                    <div>${new Date(d.fechapostulacion).toLocaleString()}</div>
+                </div>
+            `;
+
+            $('#viewPostContent').html(html);
+            $('#btnEditFromView').attr('onclick', `$('#viewPostModal').modal('hide'); editPost(${id});`);
+            $('#viewPostModal').modal('show');
+        }
+
         function initFilters() {
-            // Init Select2 for filters
+            // Init Select2 for form filters
             $('.select2-simple').select2({
                 theme: 'bootstrap-5',
                 dropdownParent: $('#newPostModal'),
@@ -213,53 +462,40 @@
                 placeholder: "Seleccione cargos..."
             });
 
-            // Events
+            // Events for form filters - Multidirectional
             $('#cF_Nivel, #cF_Depende, #cF_Tipo').on('change', function () {
-                updateCargoSelect();
-                // If Nivel changes, update dependents? simple approach: just filter the final list.
-                // Or robust cascade:
-                if (this.id === 'cF_Nivel') updateFilterOptions('nivel');
-                if (this.id === 'cF_Depende') updateFilterOptions('depende');
+                const id = this.id;
+                if (id === 'cF_Nivel') updateFormFilterOptions('nivel');
+                else if (id === 'cF_Depende') updateFormFilterOptions('depende');
+                else updateFormFilterOptions('tipo');
             });
         }
 
-        function updateFilterOptions(changedInfo) {
-            // This function is tricky with Select2 active.
-            // We want to avoid infinite loops and maintain state.
-            // Simplified: Just use memory unique values to populate what's possible.
-
-            // Ideally:
-            // 1. Get current values
+        function updateFormFilterOptions(changedFilter) {
             const curNivel = $('#cF_Nivel').val();
             const curDepende = $('#cF_Depende').val();
+            const curTipo = $('#cF_Tipo').val();
 
-            if (!changedInfo) {
-                // Initial load
-                const niveles = [...new Set(allCargos.map(c => c.nivel).filter(Boolean))].sort();
+            // Filter cargos based on all current selections
+            let filtered = allCargos;
+            if (curNivel) filtered = filtered.filter(c => c.nivel == curNivel);
+            if (curDepende) filtered = filtered.filter(c => c.dependede == curDepende);
+            if (curTipo) filtered = filtered.filter(c => c.tipo == curTipo);
+
+            // Update all filters except the one that changed
+            if (changedFilter !== 'nivel') {
+                const niveles = [...new Set(filtered.map(c => c.nivel).filter(Boolean))].sort();
                 replaceOptions('#cF_Nivel', niveles, curNivel);
             }
 
-            // Filter for Depende
-            let validCargosForDepende = allCargos;
-            if (curNivel) validCargosForDepende = validCargosForDepende.filter(c => c.nivel == curNivel);
-            const dependes = [...new Set(validCargosForDepende.map(c => c.dependede).filter(Boolean))].sort();
-
-            // Only update Depende if Nivel changed or initial
-            if (!changedInfo || changedInfo === 'nivel') {
-                replaceOptions('#cF_Depende', dependes, null); // Reset selection on cascade
-            } else {
-                // Keep selection if possible? No, standard cascade usually resets
+            if (changedFilter !== 'depende') {
+                const dependes = [...new Set(filtered.map(c => c.dependede).filter(Boolean))].sort();
+                replaceOptions('#cF_Depende', dependes, curDepende);
             }
 
-            // Filter for Tipo
-            let validCargosForTipo = validCargosForDepende;
-            // Get new depende val after update
-            const newDepende = $('#cF_Depende').val();
-            if (newDepende) validCargosForTipo = validCargosForTipo.filter(c => c.dependede == newDepende);
-
-            const tipos = [...new Set(validCargosForTipo.map(c => c.tipo).filter(Boolean))].sort();
-            if (!changedInfo || changedInfo === 'nivel' || changedInfo === 'depende') {
-                replaceOptions('#cF_Tipo', tipos, null);
+            if (changedFilter !== 'tipo') {
+                const tipos = [...new Set(filtered.map(c => c.tipo).filter(Boolean))].sort();
+                replaceOptions('#cF_Tipo', tipos, curTipo);
             }
 
             updateCargoSelect();
@@ -267,13 +503,11 @@
 
         function replaceOptions(selector, values, selected) {
             const el = $(selector);
-            el.empty();
-            el.append('<option value="">Todos</option>');
+            el.empty().append('<option value="">Todos</option>');
             values.forEach(v => {
-                const opt = new Option(v, v, false, v === selected);
-                el.append(opt);
+                const isSelected = v === selected;
+                el.append(new Option(v, v, false, isSelected));
             });
-            el.trigger('change.select2'); // Notify select2 but avoid recursive update loop if we check event source carefully
         }
 
         function updateCargoSelect() {
@@ -292,18 +526,21 @@
 
             // Rebuild Select2
             const el = $('#idCargo');
+            const currentVal = el.val();
             el.empty();
             if (filtered.length === 0) {
                 el.append('<option value="">No se encontraron cargos</option>');
             } else {
                 el.append('<option value="">Seleccione Cargo...</option>');
                 filtered.forEach(c => {
-                    // Format: Tipo - Detalle - Nivel
                     const text = `${c.tipo || ''} - ${c.detalle || ''} - ${c.nivel || ''}`;
                     el.append(new Option(text, c.idcargo));
                 });
             }
-            el.trigger('change');
+            if (currentVal && filtered.some(c => c.idcargo == currentVal)) {
+                el.val(currentVal);
+            }
+            el.trigger('change.select2'); // update UI
         }
 
         async function deletePost(id) {

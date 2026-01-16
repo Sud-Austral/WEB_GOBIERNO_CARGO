@@ -118,7 +118,7 @@
                                 <th>Teléfono</th>
                                 <th>Región</th>
                                 <th>Profesión</th>
-                                <th>CV</th>
+                                <th>Partido</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -131,7 +131,7 @@
 
     <!-- Modal Create -->
     <div class="modal fade" id="newPersonaModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">Registrar Nueva Persona</h5>
@@ -139,42 +139,93 @@
                 </div>
                 <div class="modal-body">
                     <form id="personaForm" class="row g-3" novalidate>
-                        <div class="col-md-4">
+
+                        <!-- Identificación -->
+                        <div class="col-12">
+                            <h6 class="text-primary border-bottom pb-2">Identificación</h6>
+                        </div>
+
+                        <div class="col-md-3">
                             <label class="form-label">RUT <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="rutInput" name="rut" placeholder="12.345.678-9"
                                 required>
                             <div class="invalid-feedback" id="rutError">RUT inválido</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Nombres <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="nombres" required>
-                            <div class="invalid-feedback">Campo requerido</div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Apellido Paterno <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="apellidoPaterno" required>
-                            <div class="invalid-feedback">Campo requerido</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Apellido Materno</label>
+                            <input type="text" class="form-control" name="apellidoMaterno">
                         </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha Nacimiento</label>
+                            <input type="date" class="form-control" name="fechaNacimiento">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Género</label>
+                            <select class="form-select" name="genero">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Masculino">Masculino</option>
+                                <option value="Femenino">Femenino</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Nacionalidad</label>
+                            <input type="text" class="form-control" name="nacionalidad" value="Chilena">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Región Residencia</label>
+                            <input type="text" class="form-control" name="regionResidencia">
+                        </div>
+
+                        <!-- Contacto y Perfil -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-primary border-bottom pb-2">Contacto y Perfil</h6>
+                        </div>
+
+                        <div class="col-md-4">
                             <label class="form-label">Correo Electrónico</label>
                             <input type="email" class="form-control" name="correoElectronico">
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Teléfono</label>
+                        <div class="col-md-4">
+                            <label class="form-label">Teléfono Celular</label>
                             <input type="text" class="form-control" name="telefonoCelular">
                         </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label">Región</label>
-                            <input type="text" class="form-control" name="regionResidencia">
+                        <div class="col-md-4">
+                            <label class="form-label">Partido Político</label>
+                            <input type="text" class="form-control" name="partidoPolitico">
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">Profesión <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="profesion" required>
-                            <div class="invalid-feedback">Campo requerido</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Grado Académico</label>
+                            <input type="text" class="form-control" name="gradoAcademico">
                         </div>
 
+                        <!-- Antecedentes -->
+                        <div class="col-12 mt-4">
+                            <h6 class="text-primary border-bottom pb-2">Antecedentes y Referencias</h6>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Antecedentes</label>
+                            <textarea class="form-control" name="antecedentes" rows="3"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Referencias</label>
+                            <textarea class="form-control" name="referencias" rows="3"></textarea>
+                        </div>
                         <div class="col-12">
                             <label class="form-label">Observaciones</label>
                             <textarea class="form-control" name="observaciones" rows="2"></textarea>
@@ -186,14 +237,34 @@
                             <label class="form-label fw-bold"><i class="fas fa-file-pdf text-danger me-2"></i>Curriculum
                                 Vitae (PDF) *</label>
                             <input type="file" class="form-control" id="cvFile" name="cvFile" accept=".pdf" required>
-                            <div class="form-text">Solo se permiten archivos PDF. Este documento será utilizado para
-                                análisis de IA.</div>
+                            <div class="form-text">Solo se permiten archivos PDF.</div>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" form="personaForm" class="btn btn-primary">Guardar Registro</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal View Persona Details -->
+    <div class="modal fade" id="viewPersonaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Detalles de la Persona</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3" id="viewPersonaContent">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditFromView">Editar</button>
                 </div>
             </div>
         </div>
@@ -253,6 +324,7 @@
         let currentBlobUrl = null;
         let currentDocId = null;
         let currentDocName = null;
+        let currentEditId = null;
 
         // Validación de RUT chileno (Módulo 11)
         function validarRut(rutCompleto) {
@@ -303,12 +375,27 @@
                     { data: "telefonocelular" },
                     { data: "regionresidencia" },
                     { data: "profesion" },
-                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-secondary" onclick="viewDocs(${d.idpersona})"><i class="fas fa-file-pdf"></i></button>` },
-                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deletePersona(${d.idpersona})"><i class="fas fa-trash"></i></button>` }
+                    { data: "partidopolitico", defaultContent: "-" },
+                    {
+                        data: null,
+                        orderable: false,
+                        width: "150px",
+                        render: (d) => `
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewPersona(${d.idpersona})" title="Ver Detalles"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editPersona(${d.idpersona})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="viewDocs(${d.idpersona})" title="Ver Docs"><i class="fas fa-file-pdf"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePersona(${d.idpersona})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        `
+                    }
                 ]
             });
 
             loadData();
+
+            // New Persona Button hook to reset form state
+            $('[data-bs-target="#newPersonaModal"]').on('click', function () {
+                openNewPersonaModal();
+            });
 
             // Format RUT on input
             $('#rutInput').on('input', function () {
@@ -347,61 +434,76 @@
                 btn.prop('disabled', true);
                 btn.html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
-                const fileInput = document.getElementById('cvFile');
-                const cvFile = fileInput.files[0];
-
-                if (!cvFile) {
-                    showToast("Debe adjuntar un CV en PDF", "error");
-                    btn.prop('disabled', false);
-                    btn.html('Guardar Registro');
-                    return;
-                }
-
                 const formData = new FormData(this);
+                const cvFile = document.getElementById('cvFile').files[0];
                 const personData = {};
                 for (let [key, value] of formData.entries()) {
                     if (key !== 'cvFile') personData[key] = value;
                 }
 
-                // 1. Create Persona
-                const res = await fetchAPI('/personas', {
-                    method: 'POST',
-                    body: JSON.stringify(personData)
-                });
+                try {
+                    // Logic differs for Create vs Update
+                    let personaId;
 
-                if (res && res.ok) {
-                    const result = await res.json();
-                    const personaId = result.id;
+                    if (currentEditId) {
+                        // UPDATE
+                        const res = await fetchAPI(`/personas/${currentEditId}`, {
+                            method: 'PUT',
+                            body: JSON.stringify(personData)
+                        });
 
-                    // 2. Upload CV
-                    const uploadFormData = new FormData();
-                    uploadFormData.append('archivo', cvFile);
-                    uploadFormData.append('tipo_documento', 'CV');
-                    uploadFormData.append('nombre', 'Curriculum Vitae');
+                        if (!res || !res.ok) throw new Error("Error al actualizar persona");
+                        personaId = currentEditId;
+                        showToast("Persona actualizada correctamente");
 
-                    const token = getToken();
-                    const uploadRes = await fetch(`${API_URL}/personas/${personaId}/documentos`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: uploadFormData
-                    });
-
-                    if (uploadRes.ok) {
-                        showToast("Persona registrada y CV subido correctamente");
                     } else {
-                        showToast("Persona creada pero error al subir CV", "error");
+                        // CREATE
+                        if (!cvFile) {
+                            showToast("Debe adjuntar un CV en PDF para nuevos registros", "error");
+                            throw new Error("CV requerido");
+                        }
+
+                        const res = await fetchAPI('/personas', {
+                            method: 'POST',
+                            body: JSON.stringify(personData)
+                        });
+
+                        if (!res || !res.ok) throw new Error("Error al registrar persona");
+                        const result = await res.json();
+                        personaId = result.id;
+                    }
+
+                    // Handle File Upload if present (optional on edit, required on create)
+                    if (cvFile && personaId) {
+                        const uploadFormData = new FormData();
+                        uploadFormData.append('archivo', cvFile);
+                        uploadFormData.append('tipo_documento', 'CV');
+                        uploadFormData.append('nombre', 'Curriculum Vitae');
+
+                        const token = getToken();
+                        const uploadRes = await fetch(`${API_URL}/personas/${personaId}/documentos`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${token}` },
+                            body: uploadFormData
+                        });
+
+                        if (uploadRes.ok) {
+                            if (!currentEditId) showToast("CV subido correctamente");
+                        } else {
+                            showToast("Error al subir el archivo CV", "warning");
+                        }
                     }
 
                     $('#newPersonaModal').modal('hide');
-                    this.reset();
                     loadData();
-                } else {
-                    showToast("Error al registrar persona", "error");
+
+                } catch (error) {
+                    console.error(error);
+                    if (error.message !== "CV requerido") showToast(error.message || "Error", "error");
+                } finally {
+                    btn.prop('disabled', false);
+                    btn.html(currentEditId ? 'Actualizar' : 'Guardar Registro');
                 }
-                btn.prop('disabled', false);
-                btn.html('Guardar Registro');
             });
 
             // Close viewer on click outside
@@ -416,6 +518,92 @@
                 const data = await res.json();
                 table.clear().rows.add(data).draw();
             }
+        }
+
+        function openNewPersonaModal() {
+            currentEditId = null;
+            $('#personaForm')[0].reset();
+            $('#personaForm').removeClass('was-validated');
+            // Reset modal title and button
+            $('#newPersonaModal .modal-title').text("Registrar Nueva Persona");
+            $('#newPersonaModal button[type="submit"]').text("Guardar Registro");
+            // Make CV required for new
+            $('#cvFile').prop('required', true).prev('label').html('<i class="fas fa-file-pdf text-danger me-2"></i>Curriculum Vitae (PDF) *');
+            $('#newPersonaModal').modal('show');
+        }
+
+        function editPersona(id) {
+            const p = table.rows().data().toArray().find(r => r.idpersona == id);
+            if (!p) return;
+
+            currentEditId = id;
+
+            // Populate Form
+            const f = document.getElementById('personaForm');
+            f.reset();
+            $('[name="rut"]').val(p.rut);
+            $('[name="nombres"]').val(p.nombres);
+            $('[name="apellidoPaterno"]').val(p.apellidopaterno || p.apellidoPaterno);
+            $('[name="apellidoMaterno"]').val(p.apellidomaterno || p.apellidoMaterno);
+            // Date format YYYY-MM-DD
+            if (p.fechanacimiento) {
+                const d = new Date(p.fechanacimiento);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                $('[name="fechaNacimiento"]').val(`${yyyy}-${mm}-${dd}`);
+            }
+
+            $('[name="genero"]').val(p.genero);
+            $('[name="nacionalidad"]').val(p.nacionalidad);
+            $('[name="regionResidencia"]').val(p.regionresidencia || p.regionResidencia);
+            $('[name="correoElectronico"]').val(p.correoelectronico || p.correoElectronico);
+            $('[name="telefonoCelular"]').val(p.telefonocelular || p.telefonoCelular);
+            $('[name="partidoPolitico"]').val(p.partidopolitico || p.partidoPolitico);
+            $('[name="profesion"]').val(p.profesion);
+            $('[name="gradoAcademico"]').val(p.gradoacademico || p.gradoAcademico);
+            $('[name="antecedentes"]').val(p.antecedentes);
+            $('[name="referencias"]').val(p.referencias);
+            $('[name="observaciones"]').val(p.observaciones);
+
+            // Change Modal Title and Button
+            $('#newPersonaModal .modal-title').text("Editar Persona");
+            $('#newPersonaModal button[type="submit"]').text("Actualizar");
+
+            // CV is optional on edit
+            $('#cvFile').prop('required', false).prev('label').html('<i class="fas fa-file-pdf text-danger me-2"></i>Actualizar CV (Opcional)');
+
+            $('#newPersonaModal').modal('show');
+        }
+
+        function viewPersona(id) {
+            const p = table.rows().data().toArray().find(r => r.idpersona == id);
+            if (!p) return;
+
+            const html = `
+                <div class="col-md-4"><label class="fw-bold small text-muted">RUT</label><p>${p.rut}</p></div>
+                <div class="col-md-8"><label class="fw-bold small text-muted">Nombre Completo</label><p>${p.nombres} ${p.apellidopaterno} ${p.apellidomaterno || ''}</p></div>
+                
+                <div class="col-md-4"><label class="fw-bold small text-muted">Fecha Nacimiento</label><p>${p.fechanacimiento ? new Date(p.fechanacimiento).toLocaleDateString() : '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Género</label><p>${p.genero || '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Nacionalidad</label><p>${p.nacionalidad || '-'}</p></div>
+                
+                <div class="col-md-4"><label class="fw-bold small text-muted">Correo</label><p>${p.correoelectronico || '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Teléfono</label><p>${p.telefonocelular || '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Región</label><p>${p.regionresidencia || '-'}</p></div>
+                
+                <div class="col-md-4"><label class="fw-bold small text-muted">Profesión</label><p>${p.profesion || '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Grado Académico</label><p>${p.gradoacademico || '-'}</p></div>
+                <div class="col-md-4"><label class="fw-bold small text-muted">Partido Político</label><p>${p.partidopolitico || '-'}</p></div>
+                
+                <div class="col-12"><label class="fw-bold small text-muted">Antecedentes</label><p class="bg-light p-2 rounded">${p.antecedentes || 'Sin antecedentes'}</p></div>
+                <div class="col-12"><label class="fw-bold small text-muted">Referencias</label><p class="bg-light p-2 rounded">${p.referencias || 'Sin referencias'}</p></div>
+                <div class="col-12"><label class="fw-bold small text-muted">Observaciones</label><p class="bg-light p-2 rounded">${p.observaciones || 'Sin observaciones'}</p></div>
+            `;
+
+            $('#viewPersonaContent').html(html);
+            $('#btnEditFromView').attr('onclick', `$('#viewPersonaModal').modal('hide'); editPersona(${id});`);
+            $('#viewPersonaModal').modal('show');
         }
 
         async function deletePersona(id) {

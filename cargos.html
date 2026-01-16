@@ -16,9 +16,45 @@
                 <p class="text-muted">Gestión de estructura y cargos disponibles.</p>
             </div>
             <div class="col-auto">
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newCargoModal">
+                <button class="btn btn-success" onclick="openNewCargoModal()">
                     <i class="fas fa-plus me-1"></i> Nuevo Cargo
                 </button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="card shadow-sm mb-4 bg-light border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-eraser me-1"></i> Limpiar
+                    </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label small">Buscar Texto</label>
+                        <input type="text" id="filterSearch" class="form-control" placeholder="Nombre, detalle...">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Nivel</label>
+                        <select id="filterNivel" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Depende De</label>
+                        <select id="filterDepende" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small">Tipo</label>
+                        <select id="filterTipo" class="form-select">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -43,7 +79,7 @@
         </div>
     </div>
 
-    <!-- Modal Create -->
+    <!-- Modal Create/Edit -->
     <div class="modal fade" id="newCargoModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -83,16 +119,56 @@
         </div>
     </div>
 
+    <!-- Modal View Cargo -->
+    <div class="modal fade" id="viewCargoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Detalle de Cargo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="viewCargoContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditFromViewCargo">Editar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="common.js"></script>
     <script>
         document.addEventListener('libsLoaded', initApp);
         if (window.jQuery) initApp();
 
         let table;
+        let allCargosData = [];
+        let currentEditId = null;
 
         function initApp() {
             if (!isAuthenticated()) { window.location.href = "index.html"; return; }
             renderLayout('cargos');
+
+            // Custom Filtering
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex, rowData) {
+                    if (settings.nTable.id !== 'cargosTable') return true;
+
+                    const fNivel = $('#filterNivel').val();
+                    const fDepende = $('#filterDepende').val();
+                    const fTipo = $('#filterTipo').val();
+
+                    if (!fNivel && !fDepende && !fTipo) return true;
+
+                    if (fNivel && rowData.nivel !== fNivel) return false;
+                    if (fDepende && rowData.dependede !== fDepende) return false;
+                    if (fTipo && rowData.tipo !== fTipo) return false;
+
+                    return true;
+                }
+            );
 
             table = $('#cargosTable').DataTable({
                 language: { url: "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json" },
@@ -103,8 +179,33 @@
                     { data: "dependede" },
                     { data: "tipo" },
                     { data: "detalle", className: "fw-bold" },
-                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deleteCargo(${d.idcargo})"><i class="fas fa-trash"></i></button>` }
+                    {
+                        data: null,
+                        orderable: false,
+                        render: (d) => `
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="viewCargo(${d.idcargo})" title="Ver"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-outline-primary me-1" onclick="editCargo(${d.idcargo})" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCargo(${d.idcargo})" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        `
+                    }
                 ]
+            });
+
+            // Filter events - Bidirectional Cascading
+            $('#filterNivel').on('change', function () {
+                updateAllFilters('nivel');
+                table.draw();
+            });
+            $('#filterDepende').on('change', function () {
+                updateAllFilters('depende');
+                table.draw();
+            });
+            $('#filterTipo').on('change', function () {
+                updateAllFilters('tipo');
+                table.draw();
+            });
+            $('#filterSearch').on('keyup', function () {
+                table.search(this.value).draw();
             });
 
             loadData();
@@ -117,18 +218,25 @@
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData.entries());
 
-                const res = await fetchAPI('/cargos', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
+                let res;
+                if (currentEditId) {
+                    res = await fetchAPI(`/cargos/${currentEditId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    res = await fetchAPI('/cargos', {
+                        method: 'POST',
+                        body: JSON.stringify(data)
+                    });
+                }
 
                 if (res && res.ok) {
-                    showToast("Cargo creado correctamente");
+                    showToast(currentEditId ? "Cargo actualizado" : "Cargo creado correctamente");
                     $('#newCargoModal').modal('hide');
-                    this.reset();
                     loadData();
                 } else {
-                    showToast("Error al crear cargo", "error");
+                    showToast("Error al guardar cargo", "error");
                 }
                 btn.prop('disabled', false);
             });
@@ -138,8 +246,103 @@
             const res = await fetchAPI('/cargos');
             if (res) {
                 const data = await res.json();
+                allCargosData = data;
                 table.clear().rows.add(data).draw();
+                populateFilters(data);
             }
+        }
+
+        function populateFilters(data) {
+            const niveles = [...new Set(data.map(d => d.nivel).filter(Boolean))].sort();
+            fillSelect('#filterNivel', niveles);
+            updateAllFilters('init');
+        }
+
+        function updateAllFilters(changedFilter) {
+            const nivel = $('#filterNivel').val();
+            const depende = $('#filterDepende').val();
+            const tipo = $('#filterTipo').val();
+
+            // Filter data based on current selections
+            let filtered = allCargosData;
+            if (nivel) filtered = filtered.filter(d => d.nivel == nivel);
+            if (depende) filtered = filtered.filter(d => d.dependede == depende);
+            if (tipo) filtered = filtered.filter(d => d.tipo == tipo);
+
+            // Update all dropdowns except the one that changed
+            if (changedFilter !== 'nivel') {
+                const niveles = [...new Set(filtered.map(d => d.nivel).filter(Boolean))].sort();
+                fillSelect('#filterNivel', niveles, nivel);
+            }
+
+            if (changedFilter !== 'depende') {
+                const dependes = [...new Set(filtered.map(d => d.dependede).filter(Boolean))].sort();
+                fillSelect('#filterDepende', dependes, depende);
+            }
+
+            if (changedFilter !== 'tipo') {
+                const tipos = [...new Set(filtered.map(d => d.tipo).filter(Boolean))].sort();
+                fillSelect('#filterTipo', tipos, tipo);
+            }
+        }
+
+        function fillSelect(selector, values, currentSelection) {
+            const el = $(selector);
+            const current = currentSelection !== undefined ? currentSelection : el.val();
+            el.empty().append('<option value="">Todos</option>');
+            values.forEach(v => {
+                el.append(new Option(v, v));
+            });
+            if (current && values.includes(current)) el.val(current);
+            else if (current) el.val('');
+        }
+
+        function clearFilters() {
+            $('#filterSearch').val('');
+            $('#filterNivel').val('').trigger('change');
+            // Don't manually reset depende/tipo - let cascade handle it
+            table.search('').draw();
+        }
+
+        function openNewCargoModal() {
+            currentEditId = null;
+            $('#cargoForm')[0].reset();
+            $('#newCargoModal .modal-title').text("Crear Nuevo Cargo");
+            $('#newCargoModal button[type="submit"]').text("Guardar Cargo");
+            $('#newCargoModal').modal('show');
+        }
+
+        function editCargo(id) {
+            const c = table.rows().data().toArray().find(r => r.idcargo == id);
+            if (!c) return;
+
+            currentEditId = id;
+            const f = document.getElementById('cargoForm');
+            f.reset();
+
+            $('[name="nivel"]').val(c.nivel);
+            $('[name="dependeDe"]').val(c.dependede);
+            $('[name="tipo"]').val(c.tipo);
+            $('[name="detalle"]').val(c.detalle);
+
+            $('#newCargoModal .modal-title').text("Editar Cargo");
+            $('#newCargoModal button[type="submit"]').text("Actualizar Cargo");
+            $('#newCargoModal').modal('show');
+        }
+
+        function viewCargo(id) {
+            const c = table.rows().data().toArray().find(r => r.idcargo == id);
+            if (!c) return;
+
+            const html = `
+                <p><strong>Nivel:</strong> ${c.nivel}</p>
+                <p><strong>Depende De:</strong> ${c.dependede || '-'}</p>
+                <p><strong>Tipo:</strong> ${c.tipo || '-'}</p>
+                <p><strong>Detalle:</strong> ${c.detalle}</p>
+            `;
+            $('#viewCargoContent').html(html);
+            $('#btnEditFromViewCargo').attr('onclick', `$('#viewCargoModal').modal('hide'); editCargo(${id});`);
+            $('#viewCargoModal').modal('show');
         }
 
         async function deleteCargo(id) {
