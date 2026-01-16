@@ -5,6 +5,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personas - Gestión Candidatos</title>
+    <style>
+        /* Visor Modal Styles */
+        .viewer-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .viewer-modal.active {
+            display: flex;
+        }
+
+        .viewer-content {
+            background: white;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 1200px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+
+        .viewer-title {
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .viewer-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .viewer-close:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .viewer-body {
+            flex: 1;
+            position: relative;
+            background: #374151;
+        }
+
+        .viewer-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .viewer-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
@@ -35,6 +118,7 @@
                                 <th>Teléfono</th>
                                 <th>Región</th>
                                 <th>Profesión</th>
+                                <th>CV</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -54,18 +138,22 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="personaForm" class="row g-3">
+                    <form id="personaForm" class="row g-3" novalidate>
                         <div class="col-md-4">
-                            <label class="form-label">RUT</label>
-                            <input type="text" class="form-control" name="rut" required>
+                            <label class="form-label">RUT <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="rutInput" name="rut" placeholder="12.345.678-9"
+                                required>
+                            <div class="invalid-feedback" id="rutError">RUT inválido</div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Nombres</label>
+                            <label class="form-label">Nombres <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="nombres" required>
+                            <div class="invalid-feedback">Campo requerido</div>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Apellido Paterno</label>
+                            <label class="form-label">Apellido Paterno <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="apellidoPaterno" required>
+                            <div class="invalid-feedback">Campo requerido</div>
                         </div>
 
                         <div class="col-md-6">
@@ -82,13 +170,24 @@
                             <input type="text" class="form-control" name="regionResidencia">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Profesión</label>
-                            <input type="text" class="form-control" name="profesion">
+                            <label class="form-label">Profesión <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="profesion" required>
+                            <div class="invalid-feedback">Campo requerido</div>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label">Observaciones</label>
                             <textarea class="form-control" name="observaciones" rows="2"></textarea>
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold"><i class="fas fa-file-pdf text-danger me-2"></i>Curriculum
+                                Vitae (PDF) *</label>
+                            <input type="file" class="form-control" id="cvFile" name="cvFile" accept=".pdf" required>
+                            <div class="form-text">Solo se permiten archivos PDF. Este documento será utilizado para
+                                análisis de IA.</div>
                         </div>
                     </form>
                 </div>
@@ -100,12 +199,94 @@
         </div>
     </div>
 
+    <!-- Modal View Documents List -->
+    <div class="modal fade" id="viewDocsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-pdf text-danger me-2"></i>Documentos</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="docsList">Cargando...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Viewer Modal -->
+    <div id="pdfViewerModal" class="viewer-modal">
+        <div class="viewer-content">
+            <div class="viewer-header">
+                <div class="viewer-title">
+                    <i class="fas fa-file-pdf text-danger"></i>
+                    <span id="viewerDocName">Documento</span>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="downloadCurrentDoc()">
+                        <i class="fas fa-download"></i> Descargar
+                    </button>
+                    <button class="viewer-close" onclick="closePdfViewer()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="viewer-body">
+                <div id="viewerLoading" class="viewer-loading">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Cargando documento...</p>
+                </div>
+                <iframe id="pdfFrame" class="viewer-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+
     <script src="common.js"></script>
     <script>
         document.addEventListener('libsLoaded', initApp);
         if (window.jQuery) initApp();
 
         let table;
+        let currentBlobUrl = null;
+        let currentDocId = null;
+        let currentDocName = null;
+
+        // Validación de RUT chileno (Módulo 11)
+        function validarRut(rutCompleto) {
+            if (!rutCompleto || rutCompleto.length < 3) return false;
+
+            // Limpiar RUT
+            let rut = rutCompleto.replace(/\./g, '').replace(/-/g, '').toUpperCase();
+
+            // Separar cuerpo y dígito verificador
+            let cuerpo = rut.slice(0, -1);
+            let dv = rut.slice(-1);
+
+            // Validar que el cuerpo sea numérico
+            if (!/^\d+$/.test(cuerpo)) return false;
+
+            // Calcular dígito verificador
+            let suma = 0;
+            let multiplo = 2;
+
+            for (let i = cuerpo.length - 1; i >= 0; i--) {
+                suma += parseInt(cuerpo[i]) * multiplo;
+                multiplo = multiplo === 7 ? 2 : multiplo + 1;
+            }
+
+            let resto = suma % 11;
+            let dvCalculado = 11 - resto;
+
+            let dvEsperado;
+            if (dvCalculado === 11) dvEsperado = '0';
+            else if (dvCalculado === 10) dvEsperado = 'K';
+            else dvEsperado = dvCalculado.toString();
+
+            return dv === dvEsperado;
+        }
 
         function initApp() {
             if (!isAuthenticated()) { window.location.href = "index.html"; return; }
@@ -122,35 +303,110 @@
                     { data: "telefonocelular" },
                     { data: "regionresidencia" },
                     { data: "profesion" },
+                    { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-secondary" onclick="viewDocs(${d.idpersona})"><i class="fas fa-file-pdf"></i></button>` },
                     { data: null, orderable: false, render: (d) => `<button class="btn btn-sm btn-outline-danger" onclick="deletePersona(${d.idpersona})"><i class="fas fa-trash"></i></button>` }
                 ]
             });
 
             loadData();
 
+            // Format RUT on input
+            $('#rutInput').on('input', function () {
+                let value = this.value.replace(/[^0-9kK]/g, '').toUpperCase();
+                if (value.length > 1) {
+                    value = value.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + value.slice(-1);
+                }
+                this.value = value;
+            });
+
             $('#personaForm').on('submit', async function (e) {
                 e.preventDefault();
+
+                // Reset validation states
+                this.classList.remove('was-validated');
+                $('#rutInput').removeClass('is-invalid');
+
                 const btn = $(this).find('button[type="submit"]');
+
+                // Validate RUT
+                const rutInput = document.getElementById('rutInput');
+                if (!validarRut(rutInput.value)) {
+                    rutInput.classList.add('is-invalid');
+                    document.getElementById('rutError').textContent = 'RUT chileno inválido';
+                    showToast("Por favor ingrese un RUT válido", "error");
+                    return;
+                }
+
+                // Check HTML5 validation
+                if (!this.checkValidity()) {
+                    this.classList.add('was-validated');
+                    showToast("Complete todos los campos obligatorios", "error");
+                    return;
+                }
+
                 btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin"></i> Guardando...');
 
-                // Collect data
+                const fileInput = document.getElementById('cvFile');
+                const cvFile = fileInput.files[0];
+
+                if (!cvFile) {
+                    showToast("Debe adjuntar un CV en PDF", "error");
+                    btn.prop('disabled', false);
+                    btn.html('Guardar Registro');
+                    return;
+                }
+
                 const formData = new FormData(this);
-                const data = Object.fromEntries(formData.entries());
+                const personData = {};
+                for (let [key, value] of formData.entries()) {
+                    if (key !== 'cvFile') personData[key] = value;
+                }
 
+                // 1. Create Persona
                 const res = await fetchAPI('/personas', {
                     method: 'POST',
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(personData)
                 });
 
                 if (res && res.ok) {
-                    showToast("Persona registrada correctamente");
+                    const result = await res.json();
+                    const personaId = result.id;
+
+                    // 2. Upload CV
+                    const uploadFormData = new FormData();
+                    uploadFormData.append('archivo', cvFile);
+                    uploadFormData.append('tipo_documento', 'CV');
+                    uploadFormData.append('nombre', 'Curriculum Vitae');
+
+                    const token = getToken();
+                    const uploadRes = await fetch(`${API_URL}/personas/${personaId}/documentos`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: uploadFormData
+                    });
+
+                    if (uploadRes.ok) {
+                        showToast("Persona registrada y CV subido correctamente");
+                    } else {
+                        showToast("Persona creada pero error al subir CV", "error");
+                    }
+
                     $('#newPersonaModal').modal('hide');
                     this.reset();
                     loadData();
                 } else {
-                    showToast("Error al registrar", "error");
+                    showToast("Error al registrar persona", "error");
                 }
                 btn.prop('disabled', false);
+                btn.html('Guardar Registro');
+            });
+
+            // Close viewer on click outside
+            document.getElementById('pdfViewerModal').addEventListener('click', function (e) {
+                if (e.target === this) closePdfViewer();
             });
         }
 
@@ -168,6 +424,163 @@
             if (res && res.ok) {
                 showToast("Registro eliminado");
                 loadData();
+            }
+        }
+
+        async function viewDocs(personaId) {
+            const docsList = document.getElementById('docsList');
+            docsList.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Cargando...</div>';
+
+            $('#viewDocsModal').modal('show');
+
+            const res = await fetchAPI(`/personas/${personaId}/documentos`);
+            if (res && res.ok) {
+                const docs = await res.json();
+
+                if (docs.length === 0) {
+                    docsList.innerHTML = '<div class="alert alert-info mb-0">Esta persona no tiene documentos.</div>';
+                    return;
+                }
+
+                let html = '<ul class="list-group">';
+                docs.forEach(doc => {
+                    const sizeKb = doc.archivo_size ? Math.round(doc.archivo_size / 1024) : 0;
+                    html += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                <strong>${doc.nombre || doc.archivo_nombre}</strong>
+                                <small class="text-muted ms-2">(${sizeKb} KB)</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openPdfViewer(${doc.documento_id}, '${doc.nombre || doc.archivo_nombre}')">
+                                    <i class="fas fa-eye"></i> Ver
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+                docsList.innerHTML = html;
+            } else {
+                docsList.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar documentos.</div>';
+            }
+        }
+
+        async function openPdfViewer(docId, docName) {
+            const modal = document.getElementById('pdfViewerModal');
+            const iframe = document.getElementById('pdfFrame');
+            const loading = document.getElementById('viewerLoading');
+            const nameDisplay = document.getElementById('viewerDocName');
+
+            // Store current doc info for download
+            currentDocId = docId;
+            currentDocName = docName;
+
+            nameDisplay.textContent = docName;
+            loading.style.display = 'block';
+            iframe.src = 'about:blank';
+
+            // Close the docs list modal
+            $('#viewDocsModal').modal('hide');
+
+            // Show viewer modal
+            modal.classList.add('active');
+
+            try {
+                // Fetch document with auth headers
+                const token = getToken();
+                const response = await fetch(`${API_URL}/documentos/${docId}/view`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar el documento');
+                }
+
+                const blob = await response.blob();
+
+                // Revoke previous blob URL if exists
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                }
+
+                // Create new blob URL
+                currentBlobUrl = URL.createObjectURL(blob);
+                iframe.src = currentBlobUrl;
+
+                iframe.onload = () => {
+                    loading.style.display = 'none';
+                };
+
+            } catch (error) {
+                console.error('Error:', error);
+                loading.innerHTML = `
+                    <div class="text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        <p class="mt-2">Error al cargar el documento</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        function closePdfViewer() {
+            const modal = document.getElementById('pdfViewerModal');
+            const iframe = document.getElementById('pdfFrame');
+            const loading = document.getElementById('viewerLoading');
+
+            modal.classList.remove('active');
+
+            // Reset after animation
+            setTimeout(() => {
+                iframe.src = 'about:blank';
+                loading.style.display = 'block';
+                loading.innerHTML = `
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Cargando documento...</p>
+                `;
+
+                // Revoke blob URL
+                if (currentBlobUrl) {
+                    URL.revokeObjectURL(currentBlobUrl);
+                    currentBlobUrl = null;
+                }
+            }, 300);
+        }
+
+        async function downloadCurrentDoc() {
+            if (!currentDocId || !currentDocName) return;
+
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_URL}/documentos/${currentDocId}/view`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al descargar');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentDocName.endsWith('.pdf') ? currentDocName : `${currentDocName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast("Descarga iniciada");
+            } catch (error) {
+                console.error('Error:', error);
+                showToast("Error al descargar el archivo", "error");
             }
         }
     </script>
