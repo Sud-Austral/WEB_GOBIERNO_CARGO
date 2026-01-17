@@ -528,7 +528,7 @@
 
                         // 3. AUTO-POSTULATION LOGIC (Only on Create)
                         const selectedCargos = $('#autoPostulaciones').val();
-                        if (!currentEditId && selectedCargos && selectedCargos.length > 0 && personaId) {
+                        if (selectedCargos && selectedCargos.length > 0 && personaId) {
                             let successCount = 0;
                             // Create promises for parallel execution to be faster
                             const promises = selectedCargos.map(cargoId =>

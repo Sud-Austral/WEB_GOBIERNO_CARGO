@@ -262,6 +262,7 @@ function renderLayout(activePage) {
                     <li class="nav-item"><a class="nav-link ${activePage === 'postulaciones' ? 'active' : ''}" href="postulaciones.html"><i class="fas fa-file-alt me-1 opacity-75"></i> Postulaciones</a></li>
                     <li class="nav-item"><a class="nav-link ${activePage === 'revisiones' ? 'active' : ''}" href="revisiones.html"><i class="fas fa-tasks me-1 opacity-75"></i> Revisiones</a></li>
                     <li class="nav-item"><a class="nav-link ${activePage === 'seleccion' ? 'active' : ''}" href="seleccion.html"><i class="fas fa-check-circle me-1 opacity-75"></i> Selección</a></li>
+                    <li class="nav-item"><a class="nav-link ${activePage === 'ayuda' ? 'active' : ''}" href="ayuda.html"><i class="fas fa-question-circle me-1 opacity-75"></i> Ayuda</a></li>
                     <li class="nav-item border-start ps-2 ms-2 d-none d-lg-block"></li>
                     <li class="nav-item"><a class="nav-link ${activePage === 'resultados' ? 'active' : ''} text-success fw-bold" href="resultados.html"><i class="fas fa-chart-pie me-1"></i> Resultados</a></li>
                 </ul>

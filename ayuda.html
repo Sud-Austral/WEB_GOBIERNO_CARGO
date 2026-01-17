@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayuda y Guía de Uso - Gestión Candidatos</title>
+</head>
+
+<body>
+    <div class="container pb-5">
+        <!-- Header -->
+        <div class="row align-items-center mb-5 page-header">
+            <div class="col-md-8">
+                <h2 class="fw-bold text-dark mb-1">
+                    <i class="fas fa-question-circle text-info me-2"></i>Centro de Ayuda
+                </h2>
+                <p class="text-muted mb-0">Guía paso a paso para gestionar el proceso de selección completo.</p>
+            </div>
+        </div>
+
+        <!-- Guide Steps -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="accordion shadow-sm" id="helpAccordion">
+
+                    <!-- Paso 1: Personas -->
+                    <div class="accordion-item border-0 border-bottom mb-3 bg-white rounded overflow-hidden">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button fw-bold py-4 bg-white text-dark shadow-none" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                <span
+                                    class="badge bg-primary rounded-circle me-3 p-2 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;">1</span>
+                                Ingresar Candidatos (Personas)
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-secondary pt-0 pb-4 ps-5">
+                                <p>El primer paso es registrar a los potenciales candidatos en la base de datos.</p>
+                                <ol class="ps-3 mb-3">
+                                    <li>Diríjase a la vista <strong><i class="fas fa-user-friends mx-1"></i>
+                                            Personas</strong> en el menú principal.</li>
+                                    <li>Haga clic en el botón <strong>"Nueva Persona"</strong>.</li>
+                                    <li>Complete los datos personales (RUT, Nombre, Apellidos) y profesionales.</li>
+                                    <li>Puede <strong>subir el CV</strong> en formato PDF directamente en este
+                                        formulario.</li>
+                                    <li>Guarde la información. La persona quedará disponible para ser postulada a
+                                        múltiples cargos.</li>
+                                </ol>
+                                <div class="alert alert-light border small mt-3">
+                                    <i class="fas fa-lightbulb text-warning me-2"></i><strong>Tip:</strong> También
+                                    puede cargar documentos adicionales mas tarde editando la persona.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2: Cargos -->
+                    <div class="accordion-item border-0 border-bottom mb-3 bg-white rounded overflow-hidden">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed fw-bold py-4 bg-white text-dark shadow-none"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                <span
+                                    class="badge bg-primary rounded-circle me-3 p-2 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;">2</span>
+                                Definir Vacantes (Cargos)
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-secondary pt-0 pb-4 ps-5">
+                                <p>Antes de postular a alguien, debe existir una vacante abierta.</p>
+                                <ol class="ps-3 mb-3">
+                                    <li>Vaya a la sección <strong><i class="fas fa-briefcase mx-1"></i> Cargos</strong>.
+                                    </li>
+                                    <li>Haga clic en <strong>"Nuevo Cargo"</strong>.</li>
+                                    <li>Especifique el <strong>Nombre del Cargo</strong>, el <strong>Nivel</strong> (Ej:
+                                        Profesional, Jefatura), a quién reporta (Depende De) y el Tipo
+                                        (Planta/Contrata).</li>
+                                    <li>Estos cargos aparecerán disponibles en los selectores de postulación.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 3: Postulación -->
+                    <div class="accordion-item border-0 border-bottom mb-3 bg-white rounded overflow-hidden">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed fw-bold py-4 bg-white text-dark shadow-none"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                <span
+                                    class="badge bg-primary rounded-circle me-3 p-2 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;">3</span>
+                                Postular Persona a Cargo
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-secondary pt-0 pb-4 ps-5">
+                                <p>Este proceso vincula a un candidato existente con una vacante específica.</p>
+                                <ol class="ps-3 mb-3">
+                                    <li>Acceda a <strong><i class="fas fa-file-alt mx-1"></i> Postulaciones</strong>.
+                                    </li>
+                                    <li>Seleccione <strong>"Nueva Postulación"</strong>.</li>
+                                    <li>Busque a la <strong>Persona</strong> (por nombre o RUT) y seleccione el
+                                        <strong>Cargo</strong> objetivo.</li>
+                                    <li>Al guardar, se crea un registro de postulación base en estado "Pendiente".</li>
+                                </ol>
+                                <div class="alert alert-light border small mt-3">
+                                    <i class="fas fa-info-circle text-info me-2"></i>Una misma persona puede ser
+                                    postulada a múltiples cargos simultáneamente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 4: Revisión -->
+                    <div class="accordion-item border-0 border-bottom mb-3 bg-white rounded overflow-hidden">
+                        <h2 class="accordion-header" id="headingFour">
+                            <button class="accordion-button collapsed fw-bold py-4 bg-white text-dark shadow-none"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                                <span
+                                    class="badge bg-primary rounded-circle me-3 p-2 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;">4</span>
+                                Evaluar y Revisar Postulación
+                            </button>
+                        </h2>
+                        <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-secondary pt-0 pb-4 ps-5">
+                                <p>Aquí es donde ocurre el análisis detallado del candidato.</p>
+                                <ol class="ps-3 mb-3">
+                                    <li>Vaya al módulo <strong><i class="fas fa-tasks mx-1"></i> Revisiones</strong>.
+                                    </li>
+                                    <li>Use los filtros para buscar por Cargo, Candidato o Estado.</li>
+                                    <li>Haga clic en <strong>"Evaluar"</strong> sobre un candidato pendiente.</li>
+                                    <li>En la ficha de evaluación puede:
+                                        <ul>
+                                            <li>Ver el CV del candidato en pantalla.</li>
+                                            <li>Asignar una <strong>Prioridad</strong> (Alta, Media, Baja).</li>
+                                            <li>Cambiar el <strong>Estado</strong> del proceso (Entrevista, Finalista,
+                                                etc.).</li>
+                                            <li>Agregar comentarios y observaciones de la entrevista.</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paso 5: Selección -->
+                    <div class="accordion-item border-0 border-bottom mb-3 bg-white rounded overflow-hidden">
+                        <h2 class="accordion-header" id="headingFive">
+                            <button class="accordion-button collapsed fw-bold py-4 bg-white text-dark shadow-none"
+                                type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive">
+                                <span
+                                    class="badge bg-success rounded-circle me-3 p-2 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;"><i class="fas fa-check text-white"
+                                        style="font-size: 0.8rem;"></i></span>
+                                Seleccionar Persona
+                            </button>
+                        </h2>
+                        <div id="collapseFive" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                            <div class="accordion-body text-secondary pt-0 pb-4 ps-5">
+                                <p>El paso final es confirmar que el candidato ha obtenido el cargo.</p>
+                                <ol class="ps-3 mb-3">
+                                    <li>En la misma pantalla de <strong>Revisiones</strong> (o Selección), edite la
+                                        evaluación.</li>
+                                    <li>Cambie el Estado del Proceso a <strong>"Seleccionado"</strong>.</li>
+                                    <li>Guarde los cambios.</li>
+                                    <li>El candidato aparecerá automáticamente en la vista de <strong><i
+                                                class="fas fa-chart-pie mx-1"></i> Resultados</strong>, agrupado por su
+                                        nuevo cargo.</li>
+                                </ol>
+                                <div
+                                    class="p-3 bg-success bg-opacity-10 rounded border border-success mt-3 text-success">
+                                    <strong><i class="fas fa-check-circle me-2"></i>¡Proceso Completado!</strong> El
+                                    ciclo de reclutamiento ha finalizado exitosamente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5">
+            <a href="dashboard.html" class="btn btn-primary px-4"><i class="fas fa-home me-2"></i>Volver al Inicio</a>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="common.js"></script>
+    <script>
+        document.addEventListener('libsLoaded', initApp);
+        if (typeof isAuthenticated !== 'undefined' && isAuthenticated()) initApp();
+
+        function initApp() {
+            if (!isAuthenticated()) { window.location.href = "index.html"; return; }
+            renderLayout('ayuda'); // 'ayuda' will highlight nothing or we add a menu item
+        }
+    </script>
+</body>
+
+</html>
