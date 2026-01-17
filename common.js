@@ -29,62 +29,96 @@ const LIBS = [
 
 // --- Custom Styles ---
 const STYLES = `
+    :root {
+        --bs-primary: #1e3a8a; /* Deep Navy */
+        --bs-primary-rgb: 30, 58, 138;
+        --bs-secondary: #64748b; /* Slate */
+        --bs-secondary-rgb: 100, 116, 139;
+        --bs-success: #15803d; /* Green */
+        --bs-info: #0e7490; /* Cyan */
+        --bs-warning: #b45309; /* Amber */
+        --bs-danger: #b91c1c; /* Red */
+        --bs-dark: #0f172a; /* Slate 900 */
+        --bs-light: #f8fafc; /* Slate 50 */
+        
+        --bs-body-bg: #f1f5f9; /* Slate 100 */
+        --bs-body-color: #334155; /* Slate 700 */
+        --bs-card-border-color: #e2e8f0;
+    }
+
     body {
         font-family: 'Inter', sans-serif;
-        background-color: #eef2f6;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
         font-size: 0.9rem;
     }
-    .main-navbar {
-        background: #fff;
-        box-shadow: 0 2px 4px rgba(0,0,0,.08);
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-    }
-    .navbar-brand {
-        font-weight: 700;
-        color: #0d6efd;
-        font-size: 1.25rem;
-    }
-    .nav-link {
-        color: #495057;
-        font-weight: 500;
-        margin-right: 1rem;
-    }
-    .nav-link:hover, .nav-link.active {
-        color: #0d6efd;
-    }
-    .page-header {
-        margin-bottom: 1.5rem;
-        margin-top: 1.5rem;
-    }
-    .card {
-        border: none;
-        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
-        margin-bottom: 1.5rem;
-    }
-    .card-header {
-        background-color: transparent;
-        border-bottom: 1px solid rgba(0,0,0,.125);
-        font-weight: 600;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-    .btn-primary {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-    .btn-secondary {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: #fff;
-    }
-    .table-responsive {
-        padding: 0.5rem;
-    }
-    .select2-container--bootstrap-5 .select2-selection {
-        border-color: #dee2e6;
+    
+    .navbar {
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
     
+    .navbar-brand {
+        font-weight: 700;
+        color: var(--bs-primary) !important;
+        letter-spacing: -0.5px;
+    }
+    
+    .nav-link {
+        color: #64748b !important;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+    
+    .nav-link:hover, .nav-link.active {
+        color: var(--bs-primary) !important;
+    }
+
+    .card {
+        border: 1px solid var(--bs-card-border-color);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        background-color: #fff;
+    }
+    
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 600;
+    }
+    
+    /* Elegant Buttons */
+    .btn-primary {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn-primary:hover {
+        background-color: #172554;
+        border-color: #172554;
+    }
+
+    .badge {
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    .table thead th {
+        background-color: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .select2-container--bootstrap-5 .select2-selection {
+        border-color: #cbd5e1;
+    }
+
     /* PDF Viewer Modal */
     .pdf-viewer-modal {
         position: fixed;
@@ -109,13 +143,15 @@ const STYLES = `
         border-bottom: 1px solid #dee2e6;
     }
     .pdf-viewer-header h5 {
-        border-bottom: 1px solid #cbd5e1;
+        margin: 0;
+        color: var(--bs-primary);
     }
     .pdf-viewer-body {
         flex: 1;
         width: 100%;
         height: 100%;
         position: relative;
+        background-color: #525659;
     }
     .pdf-viewer-iframe {
         width: 100%;
@@ -128,6 +164,9 @@ const STYLES = `
         font-size: 1.5rem;
         cursor: pointer;
         color: #334155;
+    }
+    .pdf-viewer-close-btn:hover {
+        color: var(--bs-danger);
     }
 `;
 
@@ -209,7 +248,7 @@ function renderLayout(activePage) {
     <nav class="navbar navbar-expand-lg main-navbar sticky-top mb-4">
         <div class="container-xl">
             <a class="navbar-brand d-flex align-items-center gap-2" href="dashboard.html">
-                <i class="fas fa-layer-group"></i> 
+                <i class="fas fa-layer-group"></i>
                 <span>GestiónCandidatos</span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -241,7 +280,7 @@ function renderLayout(activePage) {
         </div>
     </nav>
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;"></div>
-    `;
+`;
 
     // Prepend Navbar
     document.body.insertAdjacentHTML('afterbegin', navHTML);

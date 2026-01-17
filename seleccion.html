@@ -146,6 +146,7 @@
             if (res) {
                 allRevisiones = await res.json();
                 populateFilters(allRevisiones, preserveFilters);
+                filterAndDisplay(); // Show all data immediately
             }
         }
 
