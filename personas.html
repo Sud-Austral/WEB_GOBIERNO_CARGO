@@ -527,11 +527,18 @@
                         }
 
                         // 3. AUTO-POSTULATION LOGIC (Only on Create)
-                        const selectedCargos = $('#autoPostulaciones').val();
-                        if (selectedCargos && selectedCargos.length > 0 && personaId) {
+                        // 3. AUTO-POSTULATION LOGIC (New & Edit)
+                        const selectedCargos = $('#autoPostulaciones').val() || [];
+
+                        // Filter out cargos that were already pre-loaded (existing)
+                        // Note: Only relevant if we populated existingPostulacionesIds in editPersona
+                        // For new persons, existingPostulacionesIds is empty.
+                        const cargosToSend = selectedCargos.filter(cId => !existingPostulacionesIds.includes(String(cId)));
+
+                        if (cargosToSend.length > 0 && personaId) {
                             let successCount = 0;
-                            // Create promises for parallel execution to be faster
-                            const promises = selectedCargos.map(cargoId =>
+                            // Create promises for parallel execution
+                            const promises = cargosToSend.map(cargoId =>
                                 fetchAPI('/postulaciones', {
                                     method: 'POST',
                                     body: JSON.stringify({
@@ -544,7 +551,7 @@
                             const results = await Promise.all(promises);
                             successCount = results.reduce((a, b) => a + b, 0);
 
-                            showToast(`Persona creada y postulada a ${successCount} cargos.`);
+                            showToast(`Datos guardados y ${successCount} nuevas postulaciones creadas.`);
                         } else {
                             showToast(currentEditId ? "Registro actualizado" : "Registro creado exitosamente");
                         }
@@ -571,6 +578,7 @@
         }
 
         let cachedCargos = [];
+        let existingPostulacionesIds = [];
 
         async function loadData() {
             const res = await fetchAPI('/personas');
@@ -676,11 +684,12 @@
             $('#newPersonaModal').modal('show');
         }
 
-        function editPersona(id) {
+        async function editPersona(id) {
             const p = table.rows().data().toArray().find(r => r.idpersona == id);
             if (!p) return;
 
             currentEditId = id;
+            existingPostulacionesIds = []; // Clear previous state
 
             // Populate Form
             const f = document.getElementById('personaForm');
@@ -689,7 +698,7 @@
             $('[name="nombres"]').val(p.nombres);
             $('[name="apellidoPaterno"]').val(p.apellidopaterno || p.apellidoPaterno);
             $('[name="apellidoMaterno"]').val(p.apellidomaterno || p.apellidoMaterno);
-            // Date format YYYY-MM-DD
+
             if (p.fechanacimiento) {
                 const d = new Date(p.fechanacimiento);
                 const yyyy = d.getFullYear();
@@ -716,6 +725,21 @@
 
             // CV is optional on edit
             $('#cvFile').prop('required', false).prev('label').html('<i class="fas fa-file-pdf text-danger me-2"></i>Actualizar CV (Opcional)');
+
+            // --- Load Existing Postulations for this Person ---
+            $('#autoPostulaciones').val(null).trigger('change');
+            try {
+                // Fetch all postulations (optimized would be /postulaciones?idPersona=X)
+                const res = await fetchAPI('/postulaciones');
+                if (res && res.ok) {
+                    const allPosts = await res.json();
+                    const myPosts = allPosts.filter(po => po.idpersona == id);
+                    existingPostulacionesIds = myPosts.map(po => String(po.idcargo));
+
+                    // Pre-select in dropdown
+                    $('#autoPostulaciones').val(existingPostulacionesIds).trigger('change');
+                }
+            } catch (e) { console.error("Error fetching postulations", e); }
 
             $('#newPersonaModal').modal('show');
         }
