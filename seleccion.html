@@ -9,62 +9,70 @@
 
 <body>
 
-    <div class="container-fluid my-5">
-        <div class="row mb-4 align-items-center">
-            <div class="col">
-                <h2 class="fw-bold text-dark"><i class="fas fa-users-cog text-success me-2"></i>Selección de Candidatos
+    <div class="container-xl my-5">
+        <div class="row mb-5 align-items-center page-header">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1"
+                    style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-users-cog me-2 text-primary"></i>Selección de Candidatos
                 </h2>
-                <p class="text-muted">Compare y seleccione el mejor candidato para cada cargo.</p>
+                <p class="text-muted mb-0">Compare, evalúe y seleccione al mejor candidato para cada vacante.</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <!-- Actions if any -->
             </div>
         </div>
 
         <!-- Filters Section -->
-        <div class="card shadow-sm mb-4 bg-light border-0">
+        <div class="card shadow-sm mb-4 bg-white border-0">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-muted mb-0"><i class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
-                        <i class="fas fa-eraser me-1"></i> Limpiar
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                    <h6 class="fw-bold text-muted mb-0 text-uppercase small letter-spacing-1"><i
+                            class="fas fa-filter me-2"></i>Filtros de Búsqueda</h6>
+                    <button class="btn btn-sm btn-light text-muted" onclick="clearFilters()">
+                        <i class="fas fa-undo me-1"></i> Reiniciar
                     </button>
                 </div>
                 <div class="row g-3">
-                    <div class="col-md-2">
-                        <label class="form-label small">Buscar Texto</label>
-                        <input type="text" id="filterSearch" class="form-control" placeholder="Nombre...">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Buscar Texto</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-light border-end-0"><i
+                                    class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="filterSearch" class="form-control border-start-0 ps-0"
+                                placeholder="Nombre, detalle...">
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Cargo</label>
-                        <select id="filterCargo" class="form-select">
-                            <option value="">Todos</option>
-                        </select>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Cargo</label>
+                        <select id="filterCargo" class="form-select form-select-sm"></select>
                     </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Nivel</label>
-                        <select id="filterNivel" class="form-select">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Depende De</label>
-                        <select id="filterDepende" class="form-select">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Tipo</label>
-                        <select id="filterTipo" class="form-select">
-                            <option value="">Todos</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small">Estado</label>
-                        <select id="filterEstado" class="form-select">
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Estado Postulación</label>
+                        <select id="filterEstado" class="form-select form-select-sm fw-bold">
                             <option value="">Todos</option>
                             <option value="Pendiente">Pendiente</option>
                             <option value="Revisión CV">Revisión CV</option>
-                            <option value="Preseleccionado">Preseleccionado</option>
+                            <option value="Entrevista">Entrevista</option>
+                            <option value="Finalista">Finalista</option>
                             <option value="Seleccionado">Seleccionado</option>
+                            <option value="Rechazado">Rechazado</option>
                         </select>
+                    </div>
+
+
+                    <!-- Advanced Filters -->
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Nivel Cargo</label>
+                        <select id="filterNivel" class="form-select form-select-sm"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Dependencia (Jefatura)</label>
+                        <select id="filterDepende" class="form-select form-select-sm"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small text-muted fw-bold">Tipo Contrato</label>
+                        <select id="filterTipo" class="form-select form-select-sm"></select>
                     </div>
                 </div>
             </div>
@@ -72,9 +80,9 @@
 
         <!-- Results Section -->
         <div id="resultsContainer">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>
-                Seleccione un cargo para ver los candidatos postulados.
+            <div class="text-center py-5">
+                <div class="mb-3"><i class="fas fa-clipboard-list fa-3x text-muted opacity-25"></i></div>
+                <h5 class="text-muted fw-normal">Cargando datos...</h5>
             </div>
         </div>
 
@@ -82,43 +90,38 @@
 
     <!-- Detailed Info Modal -->
     <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Información Detallada del Candidato</h5>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold text-dark">Información de Candidato</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div id="detailContent"></div>
+                <div class="modal-body p-4 bg-white" id="detailContent">
+                    <!-- Content injected via JS -->
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PDF Viewer Modal -->
+    <!-- PDF Viewer Modal (Correct Structure) -->
     <div id="pdfViewerModal" class="pdf-viewer-modal">
         <div class="pdf-viewer-header">
-            <h5><i class="fas fa-file-pdf text-danger me-2"></i><span id="viewerDocName">Documento</span></h5>
-            <div>
-                <button class="btn btn-sm btn-light me-2" onclick="downloadCurrentDoc()">
-                    <i class="fas fa-download"></i> Descargar
-                </button>
-                <button class="btn-close-viewer" onclick="closePdfViewer()">
-                    <i class="fas fa-times"></i>
-                </button>
+            <div class="d-flex align-items-center">
+                <i class="fas fa-file-pdf text-danger fs-4 me-3"></i>
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark" id="viewerDocName">Documento</h5>
+                    <small class="text-muted">Vista previa</small>
+                </div>
             </div>
+            <button class="pdf-viewer-close-btn" onclick="closePdfViewer()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <div class="pdf-viewer-body">
-            <div id="viewerLoading" class="text-center p-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando...</span>
-                </div>
-                <p class="mt-3">Cargando documento...</p>
-            </div>
-            <iframe id="pdfFrame" style="display:none;"></iframe>
+            <iframe id="pdfFrame" class="pdf-viewer-iframe"></iframe>
         </div>
     </div>
 
@@ -292,22 +295,21 @@
 
             if (candidates.length === 0) {
                 container.html(`
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        No se encontraron candidatos con los filtros seleccionados.
+                    <div class="alert alert-light border shadow-sm text-center py-5">
+                         <div class="mb-3"><i class="fas fa-search fa-3x text-muted opacity-50"></i></div>
+                        <h5>No se encontraron candidatos</h5>
+                        <p class="text-muted small">Intente ajustar los filtros para ver resultados.</p>
                     </div>
                 `);
                 return;
             }
 
             // A. Pre-calculate selected candidates globally
-            // Map: Person identifier -> Selected Cargo Details
             const globallySelectedMap = {};
             allRevisiones.forEach(r => {
                 if (r.estado === 'Seleccionado') {
                     const key = r.rut || `${r.nombres}|${r.apellidopaterno}`;
-                    // Format: Tipo - Cargo - Nivel - Depende De
-                    globallySelectedMap[key] = `${r.cargo_tipo || ''} - ${r.cargo_detalle || ''} - ${r.cargo_nivel || ''} - ${r.cargo_depende || ''}`;
+                    globallySelectedMap[key] = `${r.cargo_tipo || ''} - ${r.cargo_detalle || ''} - ${r.cargo_nivel || ''}`;
                 }
             });
 
@@ -325,74 +327,124 @@
                 const firstCandidate = groupCandidates[0];
 
                 html += `
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
-                                <i class="fas fa-briefcase me-2"></i>${cargoName}
-                                <span class="badge bg-light text-dark ms-2">${firstCandidate.cargo_nivel || ''}</span>
-                            </h5>
-                            <small>${firstCandidate.cargo_tipo || ''} - ${firstCandidate.cargo_depende || ''}</small>
+                    <div class="card mb-5 border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="fw-bold text-dark mb-1">
+                                    <i class="fas fa-briefcase text-primary me-2"></i>${cargoName}
+                                </h5>
+                                <div class="d-flex gap-2 align-items-center">
+                                     <span class="badge bg-light text-dark border">${firstCandidate.cargo_nivel || '-'}</span>
+                                     <span class="small text-muted">${firstCandidate.cargo_tipo || ''}</span>
+                                     <span class="small text-muted">•</span>
+                                     <span class="small text-muted">${firstCandidate.cargo_depende || ''}</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill">${groupCandidates.length} Postulantes</span>
                         </div>
-                        <div class="card-body">
-                            <div class="row g-3">
+                        <div class="card-body bg-light bg-opacity-25 pb-4">
+                            <div class="row g-4">
                 `;
+
+                // Sort candidates: Seleccionado first, then Priority
+                groupCandidates.sort((a, b) => {
+                    if (a.estado === 'Seleccionado') return -1;
+                    if (b.estado === 'Seleccionado') return 1;
+                    const map = { 'Alta': 3, 'Media': 2, 'Baja': 1 };
+                    return (map[b.prioridad] || 0) - (map[a.prioridad] || 0);
+                });
 
                 groupCandidates.forEach(c => {
                     const statusClass = getStatusBadgeClass(c.estado);
                     const personKey = c.rut || `${c.nombres}|${c.apellidopaterno}`;
                     const selectedElsewhereCargo = globallySelectedMap[personKey];
-
-                    // Is selected elsewhere AND NOT in this specific revision?
-                    // (Ensure we don't flag the candidate selected for THIS cargo as "elsewhere")
                     const isSelectedElsewhere = selectedElsewhereCargo && c.estado !== 'Seleccionado';
 
-                    let cardBorderClass = isSelectedElsewhere ? 'border-danger border-2' : 'border';
-                    if (c.estado === 'Seleccionado') cardBorderClass = 'border-success border-3';
+                    // Card styling based on status
+                    let cardClass = "border-0 shadow-sm card-hover";
+                    let headerClass = "bg-white border-bottom-0";
+
+                    if (c.estado === 'Seleccionado') {
+                        cardClass = "border-2 border-success shadow-md";
+                        headerClass = "bg-success bg-opacity-10 border-bottom-0";
+                    }
+
+                    // Initials
+                    const names = (c.nombres || "").split(' ');
+                    const initials = (names[0][0] + (names[1] ? names[1][0] : '')).toUpperCase();
 
                     html += `
-                        <div class="col-md-6 col-lg-4">
-                            <div class="card h-100 ${cardBorderClass}">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <h6 class="mb-0">${c.nombres} ${c.apellidopaterno || ''}</h6>
-                                        <span class="badge ${statusClass}">${c.estado}</span>
+                        <div class="col-md-6 col-xl-4">
+                            <div class="card h-100 ${cardClass} overflow-hidden position-relative">
+                                ${isSelectedElsewhere ? `
+                                    <div class="position-absolute top-0 start-0 w-100 bg-warning text-dark text-center small fw-bold py-1" style="z-index:10;">
+                                        <i class="fas fa-exclamation-circle me-1"></i> Seleccionado en otro cargo
+                                    </div>
+                                    <div style="height: 20px;"></div>
+                                ` : ''}
+                                
+                                <div class="card-body position-relative">
+                                     <div class="position-absolute top-0 end-0 p-3">
+                                         <span class="badge ${statusClass}">${c.estado}</span>
+                                     </div>
+                                     
+                                    <div class="d-flex align-items-center mb-4 pt-1">
+                                        <div class="rounded-circle bg-gradient bg-primary text-white d-flex align-items-center justify-content-center shadow-sm me-3 fw-bold" 
+                                             style="width: 56px; height: 56px; font-size: 1.2rem;">
+                                            ${initials}
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0 fs-5">${c.nombres} ${c.apellidopaterno}</h6>
+                                            <small class="text-muted">${c.rut || '-'}</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-2 small mb-3">
+                                        <div class="col-6">
+                                            <div class="p-2 bg-light rounded text-center h-100 border">
+                                                <div class="text-muted x-small text-uppercase fw-bold">Prioridad</div>
+                                                <div class="fw-bold text-dark">${c.prioridad || '-'}</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-2 bg-light rounded text-center h-100 border">
+                                                <div class="text-muted x-small text-uppercase fw-bold">Fit Político</div>
+                                                <div class="fw-bold text-dark">${c.fit_politico || '-'}</div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     ${isSelectedElsewhere ? `
-                                        <div class="alert alert-danger p-2 small mb-2">
-                                            <i class="fas fa-exclamation-circle me-1"></i>
-                                            <strong>Actualmente elegido para:</strong><br>
-                                            ${selectedElsewhereCargo}
+                                        <div class="alert alert-warning p-2 small mb-3 d-flex align-items-start gap-2">
+                                            <i class="fas fa-info-circle mt-1"></i>
+                                            <div class="lh-sm"><strong>Ocupado en:</strong><br>${selectedElsewhereCargo}</div>
                                         </div>
                                     ` : ''}
-
-                                    <p class="small mb-2"><strong>RUT:</strong> ${c.rut || '-'}</p>
-                                    <p class="small mb-2"><strong>Prioridad:</strong> ${c.prioridad || '-'}</p>
-                                    <p class="small mb-2"><strong>Fit Político:</strong> ${c.fit_politico || '-'}</p>
-                                    <p class="small mb-2"><strong>Revisión CSIA:</strong> ${c.revisioncsia || 'No'}</p>
-                                    <p class="small mb-2"><strong>Fecha Revisión:</strong> ${new Date(c.fecharevision).toLocaleDateString()}</p>
 
                                     ${c.comentarios ? `
-                                        <div class="bg-light p-2 rounded small mb-3">
-                                            <strong>Comentarios:</strong>
-                                            <p class="mb-0">${c.comentarios.substring(0, 100)}${c.comentarios.length > 100 ? '...' : ''}</p>
+                                        <div class="mb-3 border-start border-3 border-primary ps-3 py-1 bg-light rounded-end">
+                                            <small class="text-muted d-block text-truncate fst-italic">"${c.comentarios}"</small>
                                         </div>
                                     ` : ''}
 
-                                    <div class="d-grid gap-2">
-                                        <button class="btn btn-sm btn-outline-info" onclick="showDetailModal(${c.idrevision})">
-                                            <i class="fas fa-info-circle me-1"></i> Ver Detalles
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewCandidateDocs(${c.idpostulacion})">
-                                            <i class="fas fa-file-pdf me-1"></i> Ver CV
-                                        </button>
+                                    <div class="d-grid gap-2 mt-auto">
+                                        <div class="btn-group shadow-sm">
+                                            <button class="btn btn-sm btn-light border flex-grow-1 text-muted" onclick="showDetailModal(${c.idrevision})">
+                                                <i class="fas fa-info-circle"></i> Detalle
+                                            </button>
+                                            <button class="btn btn-sm btn-light border flex-grow-1 text-muted" onclick="viewCandidateDocs(${c.idpostulacion})">
+                                                <i class="fas fa-file-pdf"></i> CV
+                                            </button>
+                                        </div>
+
                                         ${c.estado !== 'Seleccionado' ? `
-                                            <button class="btn btn-sm ${isSelectedElsewhere ? 'btn-outline-danger' : 'btn-success'}" onclick="selectCandidate(${c.idrevision}, '${cargoName}')">
-                                                <i class="fas fa-check me-1"></i> ${isSelectedElsewhere ? 'Mover y Seleccionar' : 'Seleccionar'}
+                                            <button class="btn btn-sm ${isSelectedElsewhere ? 'btn-outline-warning text-dark' : 'btn-primary'}" 
+                                                onclick="selectCandidate(${c.idrevision}, '${cargoName}')">
+                                                <i class="fas fa-check-circle me-1"></i> ${isSelectedElsewhere ? 'Forzar Selección' : 'Seleccionar Candidato'}
                                             </button>
                                         ` : `
-                                            <button class="btn btn-sm btn-outline-secondary" disabled>
-                                                <i class="fas fa-star me-1"></i> Ya Seleccionado
+                                             <button class="btn btn-sm btn-success disabled opacity-100">
+                                                <i class="fas fa-star me-1"></i> Seleccionado Actual
                                             </button>
                                         `}
                                     </div>

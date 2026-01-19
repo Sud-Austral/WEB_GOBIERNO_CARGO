@@ -9,107 +9,179 @@
 
 <body>
 
-    <div class="container-fluid my-4">
+    <div class="container-xl my-5">
         <!-- Welcome Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card bg-white border-0 shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center p-4">
-                        <div>
-                            <h2 class="fw-bold text-dark mb-1">Dashboard General</h2>
-                            <p class="text-muted mb-0">Resumen ejecutivo y métricas clave del proceso de selección.</p>
-                        </div>
-                        <div class="text-end">
-                            <h6 class="text-muted text-uppercase small fw-bold">Fecha Actual</h6>
-                            <h4 class="fw-bold text-primary mb-0" id="currentDate">-</h4>
-                        </div>
+        <div class="row align-items-center mb-5 page-header">
+            <div class="col-md-8">
+                <h2 class="fw-bold mb-1"
+                    style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Dashboard General
+                </h2>
+                <p class="text-muted mb-0">Resumen ejecutivo, métricas clave y alertas del proceso de selección.</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="d-inline-flex align-items-center bg-white rounded-pill px-4 py-2 shadow-sm border">
+                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                    <div>
+                        <small class="d-block text-muted line-height-sm" style="font-size: 0.7rem;">Fecha Actual</small>
+                        <span class="fw-bold text-dark" id="currentDate">-</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 10 Key Stats Grid -->
+        <!-- 10 Key Stats Grid - Modernized -->
         <div class="row g-3 mb-4">
             <!-- Row 1 -->
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Candidatos</h6>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
                         <h3 class="fw-bold text-dark mb-0" id="statTotalPersonas">-</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Cargos</h6>
-                        <h3 class="fw-bold text-dark mb-0" id="statTotalCargos">-</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Vacantes Abiertas</h6>
-                        <h3 class="fw-bold text-warning mb-0" id="statVacantes">-</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Total Postulaciones</h6>
-                        <h3 class="fw-bold text-primary mb-0" id="statTotalPostulaciones">-</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Postulaciones Hoy</h6>
-                        <h3 class="fw-bold text-info mb-0" id="statPostulacionesHoy">-</h3>
+                        <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">Total
+                            Candidatos</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Row 2 -->
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Revisiones Pendientes</h6>
-                        <h3 class="fw-bold text-danger mb-0" id="statRevisionesPendientes">-</h3>
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="bg-info bg-opacity-10 text-info rounded-circle p-2">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-0" id="statTotalCargos">-</h3>
+                        <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">Total Cargos
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-success text-white">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-white-50 small text-uppercase fw-bold mb-2">Seleccionados</h6>
-                        <h3 class="fw-bold text-white mb-0" id="statSeleccionados">-</h3>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm bg-warning bg-opacity-10">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="bg-warning text-white rounded-circle p-2 shadow-sm">
+                                <i class="fas fa-door-open"></i>
+                            </div>
+                            <span class="badge bg-white text-warning">Acción</span>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-0" id="statVacantes">-</h3>
+                        <p class="text-dark opacity-75 small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">
+                            Vacantes Abiertas</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">% Cobertura</h6>
-                        <h3 class="fw-bold text-dark mb-0" id="statCobertura">-</h3>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-0" id="statTotalPostulaciones">-</h3>
+                        <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">Total
+                            Postulaciones</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Prom. Post/Cargo</h6>
-                        <h3 class="fw-bold text-dark mb-0" id="statPromedio">-</h3>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="bg-success bg-opacity-10 text-success rounded-circle p-2">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2"
+                                style="font-size:0.6rem;">Hoy</span>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-0" id="statPostulacionesHoy">-</h3>
+                        <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">Nuevas - 24h
+                        </p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 col-sm-4">
-                <div class="card border-0 shadow-sm h-100 bg-light">
-                    <div class="card-body p-3 text-center">
-                        <h6 class="text-muted small text-uppercase fw-bold mb-2">Cargos Críticos</h6>
+
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="card card-hover h-100 border-0 shadow-sm border-start border-danger border-4">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="text-danger">
+                                <i class="fas fa-exclamation-circle fa-lg"></i>
+                            </div>
+                        </div>
                         <h3 class="fw-bold text-danger mb-0" id="statCargosCriticos">-</h3>
+                        <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem;">Cargos
+                            Críticos (0 Post.)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2 (Metrics) -->
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-bold">Revisiones Pendientes</p>
+                            <h3 class="fw-bold text-dark mb-0" id="statRevisionesPendientes">-</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-25 text-warning p-3 rounded-circle">
+                            <i class="fas fa-clock fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-hover h-100 border-0 shadow-sm bg-primary text-white">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-white-50 small mb-1 text-uppercase fw-bold">Seleccionados Finales</p>
+                            <h3 class="fw-bold text-white mb-0" id="statSeleccionados">-</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 p-3 rounded-circle text-white">
+                            <i class="fas fa-check-double fa-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-bold">% Cobertura</p>
+                            <h3 class="fw-bold text-dark mb-0" id="statCobertura">-</h3>
+                        </div>
+                        <div class="position-relative">
+                            <!-- Simple circle chart simulation using CSS border -->
+                            <div
+                                style="width: 48px; height: 48px; border-radius: 50%; border: 4px solid #e2e8f0; border-top-color: #10b981;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6">
+                <div class="card card-hover h-100 border-0 shadow-sm">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="text-muted small mb-1 text-uppercase fw-bold">Prom. Post/Cargo</p>
+                            <h3 class="fw-bold text-dark mb-0" id="statPromedio">-</h3>
+                        </div>
+                        <div class="bg-secondary bg-opacity-10 text-secondary p-3 rounded-circle">
+                            <i class="fas fa-chart-bar fa-lg"></i>
+                        </div>
                     </div>
                 </div>
             </div>

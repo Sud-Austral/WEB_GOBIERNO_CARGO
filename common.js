@@ -30,143 +30,226 @@ const LIBS = [
 // --- Custom Styles ---
 const STYLES = `
     :root {
-        --bs-primary: #1e3a8a; /* Deep Navy */
-        --bs-primary-rgb: 30, 58, 138;
-        --bs-secondary: #64748b; /* Slate */
-        --bs-secondary-rgb: 100, 116, 139;
-        --bs-success: #15803d; /* Green */
-        --bs-info: #0e7490; /* Cyan */
-        --bs-warning: #b45309; /* Amber */
-        --bs-danger: #b91c1c; /* Red */
-        --bs-dark: #0f172a; /* Slate 900 */
-        --bs-light: #f8fafc; /* Slate 50 */
+        /* Modern Color Palette (Interstellar Blue Theme) */
+        --primary-hue: 220;
+        --primary-sat: 90%;
+        --primary-lig: 40%;
         
-        --bs-body-bg: #f1f5f9; /* Slate 100 */
-        --bs-body-color: #334155; /* Slate 700 */
-        --bs-card-border-color: #e2e8f0;
+        --bs-primary: hsl(var(--primary-hue), var(--primary-sat), var(--primary-lig));
+        --bs-primary-rgb: 30, 58, 138; /* Fallback/Approx */
+        
+        --bs-secondary: #64748b;
+        --bs-success: #10b981; /* Emerald 500 */
+        --bs-info: #0ea5e9;    /* Sky 500 */
+        --bs-warning: #f59e0b; /* Amber 500 */
+        --bs-danger: #ef4444;  /* Red 500 */
+        
+        --bs-body-bg: #f3f4f6;
+        --bs-body-color: #1e293b;
+        
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --glass-border: rgba(255, 255, 255, 0.5);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
     }
 
     body {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         background-color: var(--bs-body-bg);
         color: var(--bs-body-color);
-        font-size: 0.9rem;
+        font-size: 0.925rem;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
     }
-    
-    .navbar {
-        background: #ffffff !important;
-        border-bottom: 1px solid #e2e8f0;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    /* --- Navbar Premium --- */
+    .navbar.main-navbar {
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
     }
     
     .navbar-brand {
-        font-weight: 700;
-        color: var(--bs-primary) !important;
+        font-weight: 800;
         letter-spacing: -0.5px;
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 1.25rem;
     }
     
     .nav-link {
-        color: #64748b !important;
         font-weight: 500;
-        font-size: 0.95rem;
+        color: #64748b !important;
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
     }
     
     .nav-link:hover, .nav-link.active {
         color: var(--bs-primary) !important;
+        background-color: rgba(59, 130, 246, 0.08);
     }
 
+    /* --- Cards Modern --- */
     .card {
-        border: 1px solid var(--bs-card-border-color);
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-        border-radius: 0.5rem;
-        background-color: #fff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .card-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
     }
     
     .card-header {
-        background-color: #fff;
-        border-bottom: 1px solid #e2e8f0;
+        background-color: transparent;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+        padding: 1rem 1.25rem;
         font-weight: 600;
     }
+
+    /* --- Buttons & Inputs --- */
+    .btn {
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
+    }
     
-    /* Elegant Buttons */
     .btn-primary {
-        background-color: var(--bs-primary);
-        border-color: var(--bs-primary);
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        background: linear-gradient(145deg, var(--bs-primary) 0%, #2563eb 100%);
+        border: none;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
     }
     
     .btn-primary:hover {
-        background-color: #172554;
-        border-color: #172554;
+        background: linear-gradient(145deg, #1e40af 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 6px rgba(37, 99, 235, 0.4);
+        transform: translateY(-1px);
+    }
+    
+    .btn-success {
+        background: linear-gradient(145deg, #059669 0%, #10b981 100%);
+        border: none;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-success:hover {
+        box-shadow: 0 4px 6px rgba(16, 185, 129, 0.4);
+        transform: translateY(-1px);
     }
 
+    .form-control, .form-select {
+        border-radius: 0.5rem;
+        border-color: #cbd5e1;
+        padding: 0.6rem 0.8rem;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    /* --- Tables --- */
+    .table thead th {
+        background-color: #f8fafc;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        letter-spacing: 0.6px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+    .table tbody td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+        color: #334155;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f8fafc;
+    }
+
+    /* --- Badges --- */
     .badge {
-        font-weight: 500;
+        font-weight: 600;
+        padding: 0.35em 0.65em;
+        border-radius: 6px;
         letter-spacing: 0.3px;
     }
 
-    .table thead th {
-        background-color: #f8fafc;
-        color: #475569;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    
-    .select2-container--bootstrap-5 .select2-selection {
-        border-color: #cbd5e1;
-    }
-
-    /* PDF Viewer Modal */
+    /* --- PDF Viewer --- */
     .pdf-viewer-modal {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0,0,0,0.9);
-        z-index: 9999;
+        background-color: rgba(15, 23, 42, 0.9);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
         display: none;
         flex-direction: column;
+        animation: fadeIn 0.2s ease-out;
     }
-    .pdf-viewer-modal.active {
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .pdf-viewer-container {
+        width: 100%;
+        height: 100%;
         display: flex;
+        flex-direction: column;
     }
+
     .pdf-viewer-header {
         background: #fff;
-        padding: 1rem 2rem;
+        padding: 0.75rem 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        z-index: 10;
     }
-    .pdf-viewer-header h5 {
-        margin: 0;
-        color: var(--bs-primary);
-    }
+    
     .pdf-viewer-body {
         flex: 1;
-        width: 100%;
-        height: 100%;
+        background-color: #334155;
         position: relative;
-        background-color: #525659;
+        overflow: hidden;
     }
+
     .pdf-viewer-iframe {
         width: 100%;
         height: 100%;
         border: none;
     }
+
     .pdf-viewer-close-btn {
-        background: none;
+        background: transparent;
         border: none;
-        font-size: 1.5rem;
+        color: #64748b;
+        font-size: 1.25rem;
         cursor: pointer;
-        color: #334155;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
     }
     .pdf-viewer-close-btn:hover {
-        color: var(--bs-danger);
+        background-color: #f1f5f9;
+        color: #ef4444;
     }
 `;
 
@@ -178,12 +261,6 @@ function loadDependencies() {
     document.head.appendChild(style);
 
     // Inject Libs
-    // We do this synchronously or via promises if needed, but for simplicity we append.
-    // However, jQuery must load before others.
-
-    // Ideally, we'd use a real loader, but let's just append and hope network holds up or user refreshes if it fails.
-    // Better: Recursive loader.
-
     let index = 0;
     function loadNext() {
         if (index >= LIBS.length) {
@@ -281,7 +358,7 @@ function renderLayout(activePage) {
         </div>
     </nav>
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060;"></div>
-`;
+    `;
 
     // Prepend Navbar
     document.body.insertAdjacentHTML('afterbegin', navHTML);
@@ -317,6 +394,16 @@ async function fetchAPI(endpoint, options = {}) {
 }
 
 // --- UI Helpers ---
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function showToast(message, type = 'success') {
     const bg = type === 'success' ? 'bg-success' : 'bg-danger';
     const toastHTML = `
